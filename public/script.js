@@ -1,7 +1,6 @@
 gsap.registerPlugin(Flip);
 
 if (document.body.dataset.auth === "true") auth();
-delete document.body.dataset.auth;
 
 doc.list.innerHTML = render.list(DATA);
 ref.list = new Map([...doc.list.children].map((node, i) => [node, DATA[i]]));

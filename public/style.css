@@ -396,6 +396,9 @@ li .book-update {
   color: var(--color-neutral-040);
   background: hsl(40 100 80);
 }
+[data-auth] .button {
+  display: none;
+}
 
 article {
   display: flex;
@@ -524,7 +527,10 @@ article .book-rating label:has(input:checked):hover ~ label {
   white-space: nowrap;
 }
 [name=review] {
-  border: 1px solid var(--color-neutral-090);
+  padding: 1rem .5rem;
+  border-top: .125rem solid var(--color-neutral-090);
+  border-bottom: .125rem solid var(--color-neutral-090);
+  border-radius: 0;
 }
 [name=review]:focus {
   background: var(--color-neutral-03a);
