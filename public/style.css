@@ -1,0 +1,817 @@
+* {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-neutral-02a);
+}
+
+html {
+  font-size: 16px;
+  text-size-adjust: none;
+  text-rendering: optimizeLegibility;
+  cursor: crosshair;
+  touch-action: manipulation;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--color-neutral-080) transparent;
+  scrollbar-width: thin;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  font: 1rem/1.5 var(--font-sans);
+  font-feature-settings: var(--font-feature);
+  color: var(--color-neutral-030);
+  background: #fff;
+  transition: .2s ease-in-out;
+  transition-property: opacity;
+}
+
+a {
+  color: var(--color-neutral-060);
+  text-decoration: none;
+  cursor: pointer;
+  transition: .2s ease-in-out;
+  transition-property: color;
+}
+a:hover {
+  color: var(--color-neutral-030);
+}
+
+figure {
+  display: grid;
+  place-items: center;
+  transition: var(--transition);
+  transition-property: opacity;
+}
+img {
+  max-width: 100%;
+  object-fit: cover;
+}
+svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: var(--transition);
+  transition-property: color, opacity;
+}
+path {
+  transition: var(--transition);
+  transition-property: opacity;
+}
+
+
+li {
+  text-align: justify;
+  list-style-type: none;
+}
+
+form {
+  transition: var(--transition);
+  transition-property: inset, opacity, transform;
+}
+form {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: .875rem;
+  border-top: 0px solid var(--color-neutral-080);
+}
+label {
+  position: relative;
+  font: .875rem / 1 var(--font-sans);
+}
+button, input, textarea {
+  padding: .5rem;
+  font-family: inherit;
+  font-size: .875rem;
+  color: var(--color-neutral-030);
+  background: var(--color-neutral-03a);
+  border-radius: var(--radius);
+  transition: var(--transition);
+  transition-property: color, background, border, opacity;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  background: var(--color-neutral-090);
+  cursor: pointer;
+}
+button:hover {
+  color: #fff;
+  background: var(--color-neutral-060);
+}
+button:active {
+  color: #fff;
+  background: var(--color-neutral-030);
+}
+input {
+  padding: 0 1rem 0 2rem;
+  line-height: 1;
+  height: 2rem;
+}
+input[readonly] {
+  caret-color: transparent;
+}
+input[type=number] {
+  appearance: textfield;
+}
+input[type=radio] {
+  display: none;
+}
+input[type=date] {
+  padding: .25rem .25rem .25rem .3125rem;
+  cursor: pointer;
+}
+input + .label {
+  position: absolute;
+  inset: 0 .5rem;
+  display: flex;
+  align-items: center;
+  color: var(--color-neutral-070);
+  pointer-events: none;
+}
+input + .label svg {
+  color: var(--color-neutral-050);
+}
+input + .label::after {
+  margin: 0 0 0 .5rem;
+  transition: var(--transition);
+  transition-property: opacity;
+}
+input:focus + .label::after, input:not(:placeholder-shown) + .label::after {
+  opacity: 0;
+}
+input:hover, textarea:hover {
+  back ground: var(--color-neutral-02a);
+}
+input:focus, textarea:focus {
+  background: var(--color-neutral-02a);
+}
+textarea {
+  width: 100%;
+  min-height: 9rem;
+  line-height: 1.5;
+  resize: none;
+}
+
+
+#app {
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+dialog::backdrop {
+  opacity: 0;
+}
+dialog form {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--color-neutral-03a);
+  backdrop-filter: blur(.5rem);
+  z-index: 1;
+}
+dialog label:has([readonly]) {
+  animation: shake .6s linear;
+}
+dialog .spinner {
+  position: absolute;
+  right: 0;
+}
+dialog .label::after {
+  content: "输入口令";
+}
+dialog [disabled] + .label .spinner {
+  opacity: 1;
+}
+
+header {
+  flex: 0 0 35vw;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem var(--padding);
+  height: 100dvh;
+}
+header h1 {
+  margin: 0 0 0 -.05em;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 300;
+  line-height: 1.25;
+}
+header h1 span {
+  display: block;
+}
+header p {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0 0;
+  color: var(--color-neutral-040);
+}
+header p button {
+  margin: 0 0 0 .5rem;
+  padding: .125rem;
+  border-radius: 50%;
+  color: var(--color-neutral-060);
+  background: transparent;
+}
+header form {
+  position: absolute;
+  inset: auto var(--padding) 2rem;
+}
+[data-mode] [name=filter], [name=import] {
+  opacity: 0;
+  transform: translateY(-5rem);
+  pointer-events: none;
+}
+[name=import] {
+  transform: translateY(5rem);
+}
+[data-mode=save] [name=import] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+[name=search] + .label::after {
+  content: "查询书名、作者";
+}
+[name=urls] {
+  display: block;
+  font: .75rem / 1.5 var(--font-mono);
+}
+[name=import] button {
+  position: absolute;
+  inset: auto 1rem 1rem auto;
+  color: #fff;
+  background: var(--color-neutral-060);
+  border-radius: 50%;
+}
+[name=import] button:hover {
+  background: var(--color-neutral-050);
+}
+[name=import] button:active {
+  background: var(--color-neutral-030);
+}
+[name=import] button[disabled] path:last-child {
+  opacity: 0;
+}
+[role=log] {
+  margin: 0 0 1rem;
+  font: .8125rem / 1.5 var(--font-mono);
+  color: var(--color-neutral-050);
+  transition: var(--transition);
+  transition-property: opacity;
+}
+
+main {
+  position: relative;
+  flex: 0 0 65vw;
+}
+main form, .list {
+  position: absolute;
+  inset: 0 0 auto;
+  padding: 2rem var(--padding);
+  max-height: 100dvh;
+  overflow: auto;
+}
+main form {
+  inset: 0 10rem 0 -10rem;
+  padding: 0 var(--padding);
+  opacity: 0;
+  pointer-events: none;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: var(--transition);
+  transition-property: opacity, transform;
+}
+[data-mode] .list {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10rem);
+}
+[data-mode=save] [name=save], [data-mode=view] [name=view] {
+  opacity: 1;
+  inset: 0;
+  pointer-events: all;
+}
+
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: var(--transition);
+  transition-property: opacity;
+}
+.list:has(:hover) li {
+  opacity: .5;
+}
+.list li:hover {
+  opacity: 1;
+}
+li .book-slash {
+  padding: 0 .25rem;
+  color: var(--color-neutral-080);
+}
+li .book-author {
+  color: var(--color-neutral-040);
+}
+li .book-rating {
+  display: flex;
+  align-items: center;
+  margin: 0 0 0 auto;
+  padding: 0 .5rem;
+  color: hsl(48 96 70);
+}
+li .book-rating-2 {
+  color: hsl(46 97 68);
+}
+li .book-rating-3 {
+  color: hsl(44 98 64);
+}
+li .book-rating-4 {
+  color: hsl(42 99 62);
+}
+li .book-rating-5 {
+  color: hsl(40 100 60);
+}
+li .book-update {
+  font-size: .9375rem;
+  font-feature-settings: "tnum", var(--font-feature);
+  letter-spacing: -1px;
+  color: var(--color-neutral-050);
+}
+
+[name=save] {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+[name=save] section {
+  flex: 1;
+}
+[name=save] nav {
+  flex: 0 0 4rem;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem 0;
+  max-height: 100dvh;
+  overflow: auto;
+}
+[name=save] nav figure {
+  cursor: pointer;
+  opacity: .75;
+}
+[name=save] nav figure:hover {
+  opacity: 1;
+}
+[name=save] nav figure:has([onload]) {
+  opacity: 0;
+  pointer-events: none;
+}
+[name=view] .button {
+  position: fixed;
+  left: var(--padding);
+  bottom: 2rem;
+}
+[name=view] .button button {
+  border-radius: 50%;
+}
+[name=view]:not(.readonly) [name=edit] {
+  color: var(--color-neutral-040);
+  background: hsl(40 100 80);
+}
+
+article {
+  display: flex;
+  gap: 3rem;
+  padding: 2rem 0;
+}
+article + button {
+  display: block;
+  margin: 2rem auto;
+  width: max-content;
+}
+article figure {
+  position: relative;
+  margin: 0 0 1rem;
+}
+article figure::before {
+  content: "";
+  position: absolute;
+  width: 135%;
+  aspect-ratio: 1;
+  background: var(--color-neutral-095);
+  border-radius: 50%;
+  z-index: 0;
+}
+article img {
+  position: relative;
+  box-shadow: .5rem .5rem .5rem var(--color-neutral-01a);
+}
+article input {
+  padding: .5rem;
+  height: 1.875rem;
+  color: var(--color-neutral-050);
+  background: transparent;
+  field-sizing: content;
+}
+article textarea {
+  font-size: .9375rem;
+  background: transparent;
+}
+article input:hover, article textarea:hover {
+  background: transparent;
+}
+article input:focus, article textarea:focus {
+  background: var(--color-neutral-09a);
+}
+article .book-cover {
+  flex: 0 0 clamp(8rem, 15vw,10.7rem);
+  text-align: center;
+  transition: var(--transition);
+  transition-property: opacity;
+}
+article .book-cover:has([onload]) {
+  opacity: 0;
+  pointer-events: none;
+}
+article .book-cover a {
+  font-size: .75rem;
+}
+article .book-info {
+  flex: 1 0 0;
+}
+article .book-meta {
+  margin: .5rem 0 1.5rem;
+}
+article .book-meta > div {
+  display: flex;
+  align-items: center;
+  color: var(--color-neutral-050);
+}
+article .book-meta > div:nth-child(2)::before {
+  content: "更新";
+  padding: 0 1rem 0 .5rem;
+  white-space: nowrap;
+}
+article .book-update {
+  white-space: nowrap;
+}
+article .book-update span {
+  padding: 0 1px 0 0;
+  font-feature-settings: "tnum", var(--font-feature);
+  letter-spacing: -1px;
+}
+article .book-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  margin: 0 0 0 .25rem;
+}
+article .book-rating label {
+  color: var(--color-neutral-080);
+  cursor: pointer;
+}
+article .book-rating label:hover,
+article .book-rating label:hover ~ label {
+  color: hsl(40 95 80);
+}
+article .book-rating label:has(input:checked),
+article .book-rating label:has(input:checked) ~ label {
+  color: hsl(40 100 65);
+}
+article .book-rating:hover label:has(input:checked),
+article .book-rating:hover label:has(input:checked) ~ label {
+  color: hsl(40 95 80);
+}
+article .book-rating label:has(input:checked) ~ label:hover,
+article .book-rating label:has(input:checked) ~ label:hover ~ label,
+article .book-rating label:hover ~ label:has(input:checked),
+article .book-rating label:hover ~ label:has(input:checked) ~ label,
+article .book-rating label:has(input:checked):hover,
+article .book-rating label:has(input:checked):hover ~ label {
+  color: hsl(40 100 65);
+}
+[data-name=title] {
+  font-size: 1.5rem;
+}
+[data-name=author] {
+  color: var(--color-neutral-040);
+}
+[data-name=words]::after {
+  content: " 万";
+}
+[data-name=latest] {
+  margin: 0 0 0 .75rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[name=review] {
+  border: 1px solid var(--color-neutral-090);
+}
+[name=review]:focus {
+  background: var(--color-neutral-03a);
+}
+
+
+[contenteditable] {
+  padding: .5rem;
+  line-height: 1;
+  border-radius: var(--radius);
+  cursor: text;
+  transition: var(--transition);
+  transition-property: background;
+}
+[contenteditable]:focus {
+  background: var(--color-neutral-09a);
+}
+
+.readonly textarea, .readonly [contenteditable] {
+  cursor: crosshair;
+}
+.readonly .date, .readonly .select, .readonly .book-rating {
+  pointer-events: none;
+}
+.readonly .button button:last-child {
+  opacity: 0;
+}
+
+
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.spinner {
+  opacity: 0;
+}
+.spinner circle {
+  transform-origin: center;
+  animation:
+    spin 2s linear infinite,
+    dash 2s ease-in-out infinite;
+}
+
+.select {
+  position: relative;
+  font-size: .875rem;
+}
+.select[role=combobox] {
+  margin: .5rem 0;
+  color: var(--color-neutral-050);
+  cursor: text;
+}
+.select:focus-within, .select:focus-within input {
+  color: var(--color-neutral-040);
+}
+.select input {
+  cursor: pointer;
+}
+.select [role=listbox] {
+  position: absolute;
+  top: calc(100% + .5rem);
+  width: 100%;
+  line-height: 1.875rem;
+  background: var(--color-neutral-09a);
+  border-radius: var(--radius);
+  backdrop-filter: blur(.25rem);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: var(--transition);
+  transition-property: opacity;
+}
+.select:focus-within [role=listbox] {
+  opacity: 1;
+  pointer-events: all;
+}
+.select [role=option] {
+  text-align: center;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  transition-property: background;
+}
+.select [role=option]:hover {
+  background: var(--color-neutral-02a);
+}
+.select [role=option]:active {
+  box-shadow: var(--shadow-sink);
+}
+.select[role=combobox] [role=listbox] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: .25rem;
+  padding: .5rem;
+  cursor: crosshair;
+}
+.select[role=combobox] [role=option] {
+  display: flex;
+  align-items: center;
+  padding: 0 .25rem;
+  line-height: 1.5;
+  background: var(--color-neutral-095);
+  border-radius: var(--radius);
+}
+.select[role=combobox]:focus-within [role=option] {
+  background: var(--color-neutral-090);
+}
+.select[role=combobox] [role=option]:hover {
+  background: #fff;
+}
+.select[role=combobox] button {
+  position: relative;
+  left: .1rem;
+  padding: 0;
+  width: .875rem;
+  height: .875rem;
+  color: var(--color-neutral-060);
+  background: transparent;
+  border-radius: 50%;
+}
+.select[role=combobox] button::before,
+.select[role=combobox] button::after {
+  content: "";
+  position: absolute;
+  width: .5rem;
+  height: .0625rem;
+  background: currentColor;
+  top: 50%;
+  left: 50%;
+}
+.select[role=combobox] button::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.select[role=combobox] button::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.select[role=combobox] [role=option] button:hover {
+  color: var(--color-neutral-040);
+  background: var(--color-neutral-090);
+}
+.select [role=textbox] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem;
+  padding: .5rem;
+  border-radius: var(--radius);
+  pointer-events: none;
+  transition: var(--transition);
+  transition-property: background, box-shadow;
+}
+.select:focus-within [role=textbox] {
+  background: var(--color-neutral-09a);
+  pointer-events: all;
+}
+.select [contenteditable] {
+  order: 1;
+  flex: 1;
+  padding: 0 .25rem;
+  min-width: 4rem;
+  background: none;
+  cursor: text;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  padding: .5rem;
+  line-height: 1;
+  user-select: none;
+  transition: var(--transition);
+  transition-property: background;
+}
+.date:focus-within {
+  background: var(--color-neutral-09a);
+}
+.date input {
+  padding: 0 1px 0 0;
+  height: .875rem;
+  font-feature-settings: "tnum", var(--font-feature);
+  letter-spacing: -1px;
+  caret-color: transparent;
+  cursor: pointer;
+}
+.date input:focus {
+  color: #fff;
+  background: var(--color-neutral-050);
+}
+.date label {
+  display: none;
+}
+
+:root {
+  --padding: max(2rem, calc(25vw - 18rem));
+  --font-serif: "Punctuation", "Inter", -apple-system, "MiSans", "HarmonyOS Sans", "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "思源黑体", sans-serif;
+  --font-sans: "Punctuation", "Inter", -apple-system, "MiSans", "HarmonyOS Sans", "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "思源黑体", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-feature: "ss01", "cv06", "cv11";
+  --radius: .125rem;
+  --transition: .2s ease-in-out;
+  --transition-cb: .3s cubic-bezier(.5, 0, .5, 1.5);
+  --color-neutral-010: hsl(220 15 10);
+  --color-neutral-020: hsl(225 15 20);
+  --color-neutral-030: hsl(230 15 30);
+  --color-neutral-040: hsl(235 15 40);
+  --color-neutral-050: hsl(240 15 50);
+  --color-neutral-060: hsl(245 15 60);
+  --color-neutral-070: hsl(250 15 70);
+  --color-neutral-080: hsl(255 15 80);
+  --color-neutral-090: hsl(260 12 90);
+  --color-neutral-095: hsl(265 10 95);
+  --color-neutral-100: hsl(270 10 97);
+  --color-neutral-01a: hsl(260 60 20 / .12);
+  --color-neutral-02a: hsl(260 60 20 / .08);
+  --color-neutral-03a: hsl(260 60 20 / .04);
+  --color-neutral-09a: hsl(260 10 95 / .50);
+  --color-neutral-10a: hsl(260 10 98 / .80);
+  --shadow-bump:
+    .125rem .125rem .25rem var(--color-neutral-03a),
+    .5rem .5rem 1rem var(--color-neutral-03a),
+    -.125rem -.125rem .25rem #fff,
+    -.5rem -.5rem 1rem #fffc;
+  --shadow-bump-1:
+    .125rem .125rem .25rem var(--color-neutral-03a),
+    .5rem .5rem 1rem var(--color-neutral-03a),
+    -.125rem -.125rem .25rem #fff,
+    -.5rem -.5rem 1rem #fffc,
+    inset .25rem .25rem 1rem var(--color-neutral-03a),
+    inset -.25rem -.25rem 1rem #fffc;
+  --shadow-bump-2:
+    .125rem .125rem .25rem var(--color-neutral-03a),
+    .5rem .5rem 1rem var(--color-neutral-03a),
+    -.125rem -.125rem .25rem #fff,
+    -.5rem -.5rem 1rem #fffc,
+    inset .5rem .5rem 1rem var(--color-neutral-02a),
+    inset -.5rem -.5rem 1rem #fffc;
+  --shadow-sink: inset 0 0 .5rem var(--color-neutral-03a);
+}
+.dark {
+  --ch: 40;
+  --csm: -1;
+  --cl005: 95%;
+  --cl010: 90%;
+  --cl020: 85%;
+  --cl030: 80%;
+  --cl040: 70%;
+  --cl050: 60%;
+  --cl060: 60%;
+  --cl070: 50%;
+  --cl080: 40%;
+  --cl090: 25%;
+  --cl095: 15%;
+  --cl100: 10%;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes dash {
+    0% { stroke-dasharray:  1 57; stroke-dashoffset:   0; }
+   50% { stroke-dasharray: 38 57; stroke-dashoffset: -19; }
+  100% { stroke-dasharray:  1 57; stroke-dashoffset: -57; }
+}
+@keyframes shake {
+    0% { transform: translateX(-.75rem); }
+   17% { transform: translateX(.75rem); }
+   33% { transform: translateX(-.5rem); }
+   50% { transform: translateX(.5rem); }
+   67% { transform: translateX(-.25rem); }
+   83% { transform: translateX(.25rem); }
+  100% { transform: translateX(0); }
+}
+
+@font-face {
+  font-family: "Punctuation";
+  src:
+    local("MiSans"), local("HarmonyOS Sans"), local("Source Han Sans SC"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("思源黑体"),
+    url("https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FrYtHbQ.woff2") format("woff2");
+  unicode-range: U+2018-201D;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local("Inter Variable"), local("InterVariable"), url("https://rsms.me/inter/font-files/InterVariable.woff2") format("woff2");
+}
