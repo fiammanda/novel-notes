@@ -75,7 +75,7 @@ export async function parse(urls) {
       error.push({ url, error: e.message });
     }
   }
-  return { data, error };
+  return { data, error, summary: `${data.length} link${data.length === 1 ? "" : "s"} scraped` };
 }
 
 function sleep(ms = 1000) {

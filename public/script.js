@@ -240,7 +240,7 @@ doc.form.save.addEventListener("submit", async (e) => {
     body: JSON.stringify(data)
   })
   const json = await resp.json();
-  console.log(json)
+  log(json);
 });
 
 doc.form.view.addEventListener("submit", async (e) => {

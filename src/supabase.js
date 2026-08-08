@@ -17,7 +17,7 @@ export const db = {
     } else {
       const { data, error } = await supabase
         .from("novel")
-        .select("url")
+        .select("*")
         .eq("status", "连载");
       return data;
     }
@@ -34,8 +34,7 @@ export const db = {
   async upsert(list) {
     const result = await supabase
       .from("novel")
-      .upsert(list);
-    console.log(result);
+      .upsert(list, { onConflict: "id" });
     return result;
   },
 
@@ -53,7 +52,6 @@ export const db = {
         result.error.push({ url, title, error: e.message });
       }
     }
-    console.log(result);
     return result;
   }
 };

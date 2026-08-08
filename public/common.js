@@ -28,12 +28,9 @@ const doc = {
 };
 
 function log(logs) {
-  if (logs.data && !logs.summary) {
-    logs.summary = `${logs.data.length} link${logs.data.length > 1 ? "s" : ""} scraped` 
-  }
   let html = logs.summary ? `<li class="log-summary">${logs.summary}${logs.error.length ? "; error list:" : ""}</li>` : ``;
   html += logs.error
-    .map(({ url, error}) => `<li class="log-entry"><span>[${error}]</span><span>${url}</span></li>`)
+    .map(({ url, error}) => `<li class="log-entry"><span>[${error}]</span> <span>${url}</span></li>`)
     .join("");
   doc.log.className = "hidden";
   setTimeout(() => {
@@ -149,6 +146,7 @@ const render = {
 }
 
 function auth() {
+  delete document.body.dataset.auth;
   doc.form.auth.passcode.blur();
   const button = doc.button;
   button.removeAttribute("command")

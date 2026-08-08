@@ -36,10 +36,11 @@ app.post("/api/auth", async (c) => {
 });
 
 app.post("/api/data/update", async (c) => {
-  const urls = await db.list(false);
-  const info = await parse(urls.map(({ url }) => url));
-  const data = info.map(({ id, words, status, update, latest }) => ({ id, update, latest, status, words }));
-  await db.upsert(data);
+  const list = await db.list(false);
+  const info = await parse(list.map(({ url }) => url));
+  const book = new Map(list.map((item) => [item.id, item]));
+  const data = info.data.map(({ id, words, status, update, latest }) => ({ ...book.get(id), update, latest, status, words }));
+  return c.json(await db.upsert(data));
 });
 
 app.post("/api/data/meta", async (c) => {
@@ -50,13 +51,20 @@ app.post("/api/data/meta", async (c) => {
 
 app.post("/api/data", async (c) => {
   if (!c.get("auth")) c.json({ error: "Unauthorized" }, 401);
+  const res = [];
   const data = await c.req.json();
   const novel = data.map(({ upload, ...book }) => book);
   const cover = data.filter(({ upload }) => upload).map(({ id, url, title, upload }) => ({ id, url, title, upload }));
-  const result = [];
-  result[0] = await db.upsert(novel);
-  if (cover.length) result[1] = await db.upload(cover);
-  return c.json(result);
+  res[0] = await db.upsert(novel);
+  let error = [];
+  let summary = `${data.length} novel${data.length === 1 ? "" : "s"} ` + res[0].success
+    ? `imported`
+    : `failed (${res[0].error.message})`
+  if (cover.length) {
+    res[1] = await db.upload(cover);
+    if (res[1].count) summary += `<br />${res[1].count} cover${res[1].count === 1 ? "" : "s"} uploaded`;
+  }
+  return c.json({ summary, error: res[1]?.error || [] });
 });
 
 export default app;
