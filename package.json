@@ -12,7 +12,8 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "test": "node gen.js && vercel dev"
+    "serve": "vercel dev --listen 0.0.0.0:2223",
+    "start": "node gen.js && vercel dev --listen 0.0.0.0:2223"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.12",

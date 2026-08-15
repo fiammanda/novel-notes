@@ -39,19 +39,18 @@ export const db = {
   },
 
   async upload(list) {
-    const result = { count: 0, error: []};
-    for (const { id, url, title, upload } of list) {
+    const error = [];
+    for (const { id, url, upload } of list) {
       try {
         const img = await fetch(upload);
         const bfr = await img.arrayBuffer();
         const res = await supabase.storage
           .from("cover")
           .upload(`${id}.jpg`, bfr, { contentType: "image/jpeg", cacheControl: "2592000" });
-        result.count++;
       } catch (e) {
-        result.error.push({ url, title, error: e.message });
+        error.push({ url, error: e.message });
       }
     }
-    return result;
+    return { error };
   }
 };

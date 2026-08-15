@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 
-const file = await fs.readFile("./public/test.html", "utf8");
+const file = await fs.readFile("./public/page.html", "utf8");
 const html = `export const page = (auth, data) => ${
   JSON.stringify(file
     .replace(/data-auth="true"/, `data-auth="__AUTH__"`)

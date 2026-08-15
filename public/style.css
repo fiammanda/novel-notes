@@ -1,3 +1,5 @@
+@import url("https://fontsapi.zeoseven.com/192/main/result.css");
+
 * {
   margin: 0;
   padding: 0;
@@ -36,10 +38,12 @@ a {
   text-decoration: none;
   cursor: pointer;
   transition: .2s ease-in-out;
-  transition-property: color;
+  transition-property: color, background, opacity;
 }
-a:hover {
-  color: var(--color-neutral-030);
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    color: var(--color-neutral-030);
+  }
 }
 
 figure {
@@ -65,22 +69,26 @@ path {
   transition-property: opacity;
 }
 
-
+p {
+  transition: var(--transition);
+  transition-property: color, background;
+}
 li {
-  text-align: justify;
   list-style-type: none;
 }
 
-form {
-  transition: var(--transition);
-  transition-property: inset, opacity, transform;
-}
 form {
   display: block;
   margin: 0;
   padding: 0;
   font-size: .875rem;
   border-top: 0px solid var(--color-neutral-080);
+  transition: var(--transition);
+  transition-property: inset, opacity, transform;
+}
+fieldset {
+  display: block;
+  min-width: 0;
 }
 label {
   position: relative;
@@ -88,10 +96,12 @@ label {
 }
 button, input, textarea {
   padding: .5rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
+  font-feature-settings: var(--font-feature);
   font-size: .875rem;
+  line-height: 1;
   color: var(--color-neutral-030);
-  background: var(--color-neutral-03a);
+  background: var(--color-neutral-100);
   border-radius: var(--radius);
   transition: var(--transition);
   transition-property: color, background, border, opacity;
@@ -99,33 +109,42 @@ button, input, textarea {
 button {
   display: inline-flex;
   align-items: center;
-  line-height: 1;
-  background: var(--color-neutral-090);
+  background: var(--color-neutral-01a);
+  border-radius: 50%;
   cursor: pointer;
 }
-button:hover {
-  color: #fff;
-  background: var(--color-neutral-060);
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    color: #fff;
+    background: var(--color-neutral-00a);
+  }
 }
 button:active {
   color: #fff;
   background: var(--color-neutral-030);
 }
-input {
-  padding: 0 1rem 0 2rem;
-  line-height: 1;
-  height: 2rem;
+button:disabled svg:first-child {
+  opacity: 0;
 }
-input[readonly] {
+button:disabled svg:last-child {
+  opacity: 1;
+}
+input {
+  height: 1.875rem;
+}
+label input {
+  padding: .5rem 2rem .5rem .5rem;
+}
+input:read-only {
   caret-color: transparent;
 }
-input[type=number] {
+input[type="number"] {
   appearance: textfield;
 }
-input[type=radio] {
+input[type="radio"] {
   display: none;
 }
-input[type=date] {
+input[type="date"] {
   padding: .25rem .25rem .25rem .3125rem;
   cursor: pointer;
 }
@@ -134,25 +153,33 @@ input + .label {
   inset: 0 .5rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   color: var(--color-neutral-070);
   pointer-events: none;
 }
 input + .label svg {
   color: var(--color-neutral-050);
 }
-input + .label::after {
-  margin: 0 0 0 .5rem;
+input + .label::before {
   transition: var(--transition);
   transition-property: opacity;
 }
-input:focus + .label::after, input:not(:placeholder-shown) + .label::after {
+input:focus + .label::before, input:not(:placeholder-shown) + .label::before {
   opacity: 0;
 }
-input:hover, textarea:hover {
-  back ground: var(--color-neutral-02a);
+@media (hover: hover) and (pointer: fine) {
+  input:hover, textarea:hover {
+    background: var(--color-neutral-095);
+  }
 }
 input:focus, textarea:focus {
-  background: var(--color-neutral-02a);
+  background: var(--color-neutral-090);
+}
+input:disabled, textarea:disabled {
+  opacity: 1;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--color-neutral-070);
 }
 textarea {
   width: 100%;
@@ -160,7 +187,6 @@ textarea {
   line-height: 1.5;
   resize: none;
 }
-
 
 #app {
   display: flex;
@@ -176,22 +202,27 @@ dialog form {
   inset: 0;
   display: grid;
   place-items: center;
-  background: var(--color-neutral-03a);
+  background: var(--color-neutral-01a);
   backdrop-filter: blur(.5rem);
   z-index: 1;
 }
-dialog label:has([readonly]) {
+dialog label:has(input[readonly]) {
   animation: shake .6s linear;
 }
-dialog .spinner {
-  position: absolute;
-  right: 0;
+dialog input:disabled + .label svg:first-child {
+  opacity: 0;
 }
-dialog .label::after {
+dialog input:disabled + .label svg:last-child {
+  opacity: 1;
+}
+dialog input {
+  background: var(--color-neutral-100) !important;
+}
+dialog .label::before {
   content: "输入口令";
 }
-dialog [disabled] + .label .spinner {
-  opacity: 1;
+dialog .spinner {
+  right: 0;
 }
 
 header {
@@ -203,7 +234,7 @@ header {
   height: 100dvh;
 }
 header h1 {
-  margin: 0 0 0 -.05em;
+  margin: -.1875rem 0 0 -.05em;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 300;
   line-height: 1.25;
@@ -211,65 +242,150 @@ header h1 {
 header h1 span {
   display: block;
 }
-header p {
-  display: flex;
-  align-items: center;
-  margin: 1.5rem 0 0;
-  color: var(--color-neutral-040);
+header h1 strong {
+  font-weight: inherit;
+  color: hsl(40 100 65);
 }
-header p button {
-  margin: 0 0 0 .5rem;
+header p {
+  display: grid;
+  grid-template-columns: 3.25rem 1.25rem;
+  align-items: center;
+  gap: .5rem;
+  margin: 1.5rem 0 0;
+  font-family: "Yozai", var(--font-sans);
+  color: var(--color-neutral-060);
+}
+header p button, header p a {
+  grid-area: 1 / 2;
+  display: inline-flex;
   padding: .125rem;
+  background: transparent;
   border-radius: 50%;
   color: var(--color-neutral-060);
-  background: transparent;
 }
+header p button, [data-auth][data-mode] header p button, [data-auth] header p a {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  header p a:hover {
+    color: #fff;
+    background: var(--color-neutral-00a);
+  }
+}
+header p a:active {
+  color: #fff;
+  background: var(--color-neutral-030);
+}
+[data-auth] header p button, [data-auth][data-mode="view"] header p a {
+  opacity: 1;
+  pointer-events: all;
+}
+
 header form {
   position: absolute;
   inset: auto var(--padding) 2rem;
 }
-[data-mode] [name=filter], [name=import] {
+[data-mode] [name="filter"], [name="import"] {
   opacity: 0;
   transform: translateY(-5rem);
   pointer-events: none;
 }
-[name=import] {
+[name="import"] {
   transform: translateY(5rem);
 }
-[data-mode=save] [name=import] {
+[data-mode="save"] [name="import"] {
   opacity: 1;
   transform: translateY(0);
   pointer-events: all;
 }
-[name=search] + .label::after {
-  content: "查询书名、作者";
+[name="filter"] > div {
+  display: flex;
+  gap: .5rem;
+  margin: .5rem 0 0;
 }
-[name=urls] {
+[name="filter"] input {
+  width: 12.375rem;
+}
+[name="filter"] button {
+  margin: 0 0 0 .75rem;
+  padding: .4375rem;
+  color: var(--color-neutral-070);
+  background: var(--color-neutral-100);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+[name="filter"] button:hover {
+  background: var(--color-neutral-050);
+}
+[name="filter"] button:active {
+  background: var(--color-neutral-030);
+}
+[name="filter"]:has(input:not(:placeholder-shown)) button {
+  color: var(--color-neutral-050);
+  background: var(--color-neutral-01a);
+  pointer-events: all;
+}
+[name="filter"] .select {
+  width: 2.75rem;
+  color: var(--color-neutral-030);
+}
+[name="filter"] .select [role="listbox"] {
+  top: unset;
+  bottom: calc(100% + .5rem);
+}
+[name="filter"] .select [role="listbox"],
+[name="filter"] .select:focus-within input {
+  background: var(--color-neutral-090);
+}
+[name="search"] + .label::before {
+  content: "查询书名作者简介";
+}
+[name="urls"] {
   display: block;
   font: .75rem / 1.5 var(--font-mono);
+  white-space: nowrap;
 }
-[name=import] button {
+[name="urls"].hidden {
+  opacity: 1 !important;
+  color: transparent;
+}
+[name="import"] button {
   position: absolute;
   inset: auto 1rem 1rem auto;
   color: #fff;
   background: var(--color-neutral-060);
-  border-radius: 50%;
 }
-[name=import] button:hover {
+[name="import"] button:hover {
   background: var(--color-neutral-050);
 }
-[name=import] button:active {
+[name="import"] button:active {
   background: var(--color-neutral-030);
 }
-[name=import] button[disabled] path:last-child {
+[name="import"] button[disabled] path:last-child {
   opacity: 0;
 }
-[role=log] {
+[role="log"] {
   margin: 0 0 1rem;
-  font: .8125rem / 1.5 var(--font-mono);
+  font: .75rem / 1.5 var(--font-mono);
   color: var(--color-neutral-050);
   transition: var(--transition);
   transition-property: opacity;
+}
+.log-entry {
+  display: flex;
+  gap: .75rem;
+  white-space: nowrap;
+}
+.log-entry span:first-child {
+  flex: 1;
+}
+.log-entry span:last-child {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: all;
+  cursor: pointer;
 }
 
 main {
@@ -292,80 +408,134 @@ main form {
 .list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   transition: var(--transition);
-  transition-property: opacity, transform;
+  transition-property: opacity, inset;
+}
+.list::after {
+  content: "没搜到哦 (._.)";
+  position: absolute;
+  color: var(--color-neutral-070);
+  transition: var(--transition);
+  transition-property: opacity;
+  opacity: 0;
+}
+.list:not(:has(> :not(.hidden)))::after {
+  opacity: 1;
 }
 [data-mode] .list {
   opacity: 0;
   pointer-events: none;
-  transform: translateX(10rem);
+  inset: 0 -10rem 0 10rem;
 }
-[data-mode=save] [name=save], [data-mode=view] [name=view] {
+[data-mode="save"] [name="save"], [data-mode="view"] [name="view"] {
   opacity: 1;
   inset: 0;
   pointer-events: all;
 }
 
 .list li {
+  margin: 0 0 1rem;
+  max-height: 1.5rem;
+  transition: var(--transition);
+  transition-property: margin, max-height, opacity;
+}
+.list li:last-child {
+  margin: 0;
+}
+.list li.hidden {
+  margin: 0;
+  max-height: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .list:has(:hover) li {
+    opacity: .5;
+  }
+  .list li:hover {
+    opacity: 1;
+  }
+}
+.list a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: pointer;
-  transition: var(--transition);
-  transition-property: opacity;
+  white-space: nowrap;
+  color: inherit;
 }
-.list:has(:hover) li {
-  opacity: .5;
-}
-.list li:hover {
-  opacity: 1;
-}
-li .book-slash {
+a .book-slash {
   padding: 0 .25rem;
   color: var(--color-neutral-080);
 }
-li .book-author {
-  color: var(--color-neutral-040);
+a .book-title {
+  max-width: 16rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-li .book-rating {
+a .book-author {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-neutral-050);
+}
+a .book-rating {
   display: flex;
   align-items: center;
   margin: 0 0 0 auto;
   padding: 0 .5rem;
-  color: hsl(48 96 70);
 }
-li .book-rating-2 {
-  color: hsl(46 97 68);
+a .book-rating svg {
+  margin: 0 -1px 0 0;
 }
-li .book-rating-3 {
-  color: hsl(44 98 64);
+a [data-rating="1"] {
+  color: hsl(48 92 70);
 }
-li .book-rating-4 {
-  color: hsl(42 99 62);
+a [data-rating="2"] {
+  color: hsl(46 94 68);
 }
-li .book-rating-5 {
+a [data-rating="3"] {
+  color: hsl(44 96 64);
+}
+a [data-rating="4"] {
+  color: hsl(42 98 62);
+}
+a [data-rating="5"] {
   color: hsl(40 100 60);
 }
-li .book-update {
+a .book-update {
   font-size: .9375rem;
   font-feature-settings: "tnum", var(--font-feature);
   letter-spacing: -1px;
-  color: var(--color-neutral-050);
+  color: var(--color-neutral-070);
+}
+a .book-update span {
+  margin: 0 -1px;
+}
+a .book-update span:last-child {
+  display: inline-block;
+  margin: 0 1px;
+  transform: translateY(-8%);
 }
 
-[name=save] {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
+[name="save"] fieldset {
+  padding: 0 6rem 0 0;
 }
-[name=save] section {
-  flex: 1;
+[name="save"] fieldset:empty {
+  position: absolute;
+  inset: 0;
+  background: url("/favicon.png") center / 15rem no-repeat;
+  opacity: .5;
 }
-[name=save] nav {
-  flex: 0 0 4rem;
-  position: sticky;
+[name="save"] fieldset:empty + footer {
+  display: none;
+}
+[name="save"] footer {
+  padding: 2rem 0;
+  text-align: center;
+}
+[name="save"] nav {
+  position: fixed;
   top: 0;
+  right: 2rem;
+  width: 4rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -373,42 +543,58 @@ li .book-update {
   max-height: 100dvh;
   overflow: auto;
 }
-[name=save] nav figure {
+[name="save"] nav figure {
   cursor: pointer;
   opacity: .75;
 }
-[name=save] nav figure:hover {
+[name="save"] nav figure:hover {
   opacity: 1;
 }
-[name=save] nav figure:has([onload]) {
+[name="save"] nav figure:has([onload]) {
   opacity: 0;
   pointer-events: none;
 }
-[name=view] .button {
+[name="view"] .book-cover {
+  position: sticky;
+  top: 2rem;
+}
+[name="view"] footer {
   position: fixed;
   left: var(--padding);
   bottom: 2rem;
+  transition: var(--transition);
+  transition-property: opacity;
 }
-[name=view] .button button {
-  border-radius: 50%;
+[data-auth] [name="view"] footer {
+  opacity: 0;
+  pointer-events: none;
 }
-[name=view]:not(.readonly) [name=edit] {
+
+fieldset:disabled + footer button[type="submit"] {
+  opacity: 0;
+  pointer-events: none;
+}
+fieldset:not(:disabled) + footer button[type="reset"] {
   color: var(--color-neutral-040);
   background: hsl(40 100 80);
 }
-[data-auth] .button {
-  display: none;
+fieldset:disabled input:hover, fieldset:disabled textarea:hover,
+fieldset:disabled .date:hover,
+fieldset:disabled [role="textbox"]:hover {
+  background: transparent;
+}
+fieldset:disabled textarea {
+  cursor: crosshair;
+}
+fieldset:disabled .date, fieldset:disabled .select, fieldset:disabled .book-rating {
+  pointer-events: none;
 }
 
 article {
   display: flex;
-  gap: 3rem;
-  padding: 2rem 0;
-}
-article + button {
-  display: block;
-  margin: 2rem auto;
-  width: max-content;
+  align-items: flex-start;
+  gap: var(--padding);
+  padding: 1.5rem 0 2rem;
 }
 article figure {
   position: relative;
@@ -417,7 +603,7 @@ article figure {
 article figure::before {
   content: "";
   position: absolute;
-  width: 135%;
+  height: 100%;
   aspect-ratio: 1;
   background: var(--color-neutral-095);
   border-radius: 50%;
@@ -429,7 +615,6 @@ article img {
 }
 article input {
   padding: .5rem;
-  height: 1.875rem;
   color: var(--color-neutral-050);
   background: transparent;
   field-sizing: content;
@@ -439,13 +624,14 @@ article textarea {
   background: transparent;
 }
 article input:hover, article textarea:hover {
-  background: transparent;
+  background: var(--color-neutral-100);
 }
 article input:focus, article textarea:focus {
-  background: var(--color-neutral-09a);
+  background: var(--color-neutral-095);
 }
 article .book-cover {
-  flex: 0 0 clamp(8rem, 15vw,10.7rem);
+  flex: 0 0 clamp(8rem, 15vw, 10.7rem);
+  padding: .125rem 0 0;
   text-align: center;
   transition: var(--transition);
   transition-property: opacity;
@@ -510,63 +696,64 @@ article .book-rating label:has(input:checked):hover,
 article .book-rating label:has(input:checked):hover ~ label {
   color: hsl(40 100 65);
 }
-[data-name=title] {
+[data-name="title"] {
   font-size: 1.5rem;
 }
-[data-name=author] {
+[data-name="author"] {
   color: var(--color-neutral-040);
 }
-[data-name=words]::after {
+[data-name="words"]::after {
   content: " 万";
 }
-[data-name=latest] {
+[data-name="latest"] {
   margin: 0 0 0 .75rem;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-[name=review] {
+[name="review"] {
   padding: 1rem .5rem;
+  font-family: "Yozai", var(--font-sans);
   border-top: .125rem solid var(--color-neutral-090);
   border-bottom: .125rem solid var(--color-neutral-090);
   border-radius: 0;
 }
-[name=review]:focus {
+[name="review"]:focus {
   background: var(--color-neutral-03a);
 }
-
 
 [contenteditable] {
   padding: .5rem;
   line-height: 1;
   border-radius: var(--radius);
-  cursor: text;
   transition: var(--transition);
   transition-property: background;
 }
-[contenteditable]:focus {
-  background: var(--color-neutral-09a);
+[contenteditable="true"] {
+  cursor: text;
 }
-
-.readonly textarea, .readonly [contenteditable] {
-  cursor: crosshair;
+[contenteditable="true"]:hover {
+  background: var(--color-neutral-100);
 }
-.readonly .date, .readonly .select, .readonly .book-rating {
-  pointer-events: none;
+[contenteditable="true"]:focus {
+  background: var(--color-neutral-095);
 }
-.readonly .button button:last-child {
-  opacity: 0;
-}
-
 
 .hidden {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+.hidden .list, .hidden form {
+  transition-duration: 0s;
+}
 
 .spinner {
+  position: absolute;
   opacity: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
 }
 .spinner circle {
   transform-origin: center;
@@ -578,19 +765,25 @@ article .book-rating label:has(input:checked):hover ~ label {
 .select {
   position: relative;
   font-size: .875rem;
-}
-.select[role=combobox] {
-  margin: .5rem 0;
   color: var(--color-neutral-050);
+}
+.select[role="combobox"] {
+  margin: .5rem 0;
   cursor: text;
 }
-.select:focus-within, .select:focus-within input {
+.select:focus-within {
   color: var(--color-neutral-040);
 }
 .select input {
+  width: 100%;
+  text-align: center;
   cursor: pointer;
 }
-.select [role=listbox] {
+.select:focus-within input {
+  color: var(--color-neutral-040);
+  background: var(--color-neutral-095);
+}
+.select [role="listbox"] {
   position: absolute;
   top: calc(100% + .5rem);
   width: 100%;
@@ -604,24 +797,27 @@ article .book-rating label:has(input:checked):hover ~ label {
   transition: var(--transition);
   transition-property: opacity;
 }
-.select:focus-within [role=listbox] {
+.select:focus-within [role="listbox"] {
   opacity: 1;
   pointer-events: all;
 }
-.select [role=option] {
+.select [role="option"] {
   text-align: center;
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
   transition-property: background;
 }
-.select [role=option]:hover {
+.select [role="option"]:hover {
   background: var(--color-neutral-02a);
 }
-.select [role=option]:active {
+.select [role="option"]:active {
   box-shadow: var(--shadow-sink);
 }
-.select[role=combobox] [role=listbox] {
+.select [data-placeholder]::before {
+  content: attr(data-placeholder);
+}
+.select[role="combobox"] [role="listbox"] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -630,21 +826,18 @@ article .book-rating label:has(input:checked):hover ~ label {
   padding: .5rem;
   cursor: crosshair;
 }
-.select[role=combobox] [role=option] {
+.select[role="combobox"] [role="option"] {
   display: flex;
   align-items: center;
   padding: 0 .25rem;
   line-height: 1.5;
-  background: var(--color-neutral-095);
+  background: var(--color-neutral-02a);
   border-radius: var(--radius);
 }
-.select[role=combobox]:focus-within [role=option] {
-  background: var(--color-neutral-090);
-}
-.select[role=combobox] [role=option]:hover {
+.select[role="combobox"] [role="option"]:hover {
   background: #fff;
 }
-.select[role=combobox] button {
+.select[role="combobox"] button {
   position: relative;
   left: .1rem;
   padding: 0;
@@ -652,10 +845,9 @@ article .book-rating label:has(input:checked):hover ~ label {
   height: .875rem;
   color: var(--color-neutral-060);
   background: transparent;
-  border-radius: 50%;
 }
-.select[role=combobox] button::before,
-.select[role=combobox] button::after {
+.select[role="combobox"] button::before,
+.select[role="combobox"] button::after {
   content: "";
   position: absolute;
   width: .5rem;
@@ -664,17 +856,17 @@ article .book-rating label:has(input:checked):hover ~ label {
   top: 50%;
   left: 50%;
 }
-.select[role=combobox] button::before {
+.select[role="combobox"] button::before {
   transform: translate(-50%, -50%) rotate(45deg);
 }
-.select[role=combobox] button::after {
+.select[role="combobox"] button::after {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
-.select[role=combobox] [role=option] button:hover {
+.select[role="combobox"] [role="option"] button:hover {
   color: var(--color-neutral-040);
   background: var(--color-neutral-090);
 }
-.select [role=textbox] {
+.select [role="textbox"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -685,20 +877,26 @@ article .book-rating label:has(input:checked):hover ~ label {
   transition: var(--transition);
   transition-property: background, box-shadow;
 }
-.select:focus-within [role=textbox] {
-  background: var(--color-neutral-09a);
+.select:hover [role="textbox"] {
+  background: var(--color-neutral-100);
+}
+.select:focus-within [role="textbox"] {
+  background: var(--color-neutral-095);
   pointer-events: all;
 }
 .select [contenteditable] {
   order: 1;
-  flex: 1;
-  padding: 0 .25rem;
-  min-width: 4rem;
+  padding: 0;
+  min-width: 0;
   background: none;
-  cursor: text;
+}
+.select:focus-within [contenteditable] {
+  padding: 0 .25rem;
+  min-width: 2rem;
 }
 
 .date {
+  position: relative;
   display: flex;
   align-items: center;
   padding: .5rem;
@@ -707,8 +905,11 @@ article .book-rating label:has(input:checked):hover ~ label {
   transition: var(--transition);
   transition-property: background;
 }
+.date:hover {
+  background: var(--color-neutral-100);
+}
 .date:focus-within {
-  background: var(--color-neutral-09a);
+  background: var(--color-neutral-095);
 }
 .date input {
   padding: 0 1px 0 0;
@@ -723,14 +924,21 @@ article .book-rating label:has(input:checked):hover ~ label {
   background: var(--color-neutral-050);
 }
 .date label {
-  display: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  text-align: center;
+}
+@media (hover: hover) and (pointer: fine) {
+  .date label {
+    display: none;
+  }
 }
 
 :root {
   --padding: max(2rem, calc(25vw - 18rem));
-  --font-serif: "Punctuation", "Inter", -apple-system, "MiSans", "HarmonyOS Sans", "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "思源黑体", sans-serif;
   --font-sans: "Punctuation", "Inter", -apple-system, "MiSans", "HarmonyOS Sans", "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "思源黑体", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: "Iosevka", monospace;
   --font-feature: "ss01", "cv06", "cv11";
   --radius: .125rem;
   --transition: .2s ease-in-out;
@@ -738,55 +946,203 @@ article .book-rating label:has(input:checked):hover ~ label {
   --color-neutral-010: hsl(220 15 10);
   --color-neutral-020: hsl(225 15 20);
   --color-neutral-030: hsl(230 15 30);
-  --color-neutral-040: hsl(235 15 40);
-  --color-neutral-050: hsl(240 15 50);
+  --color-neutral-040: hsl(235 14 40);
+  --color-neutral-050: hsl(240 13 50);
   --color-neutral-060: hsl(245 15 60);
-  --color-neutral-070: hsl(250 15 70);
-  --color-neutral-080: hsl(255 15 80);
-  --color-neutral-090: hsl(260 12 90);
-  --color-neutral-095: hsl(265 10 95);
-  --color-neutral-100: hsl(270 10 97);
+  --color-neutral-070: hsl(250 16 70);
+  --color-neutral-080: hsl(255 18 80);
+  --color-neutral-090: hsl(260 20 90);
+  --color-neutral-095: hsl(265 20 95);
+  --color-neutral-100: hsl(270 20 98);
+  --color-neutral-00a: hsl(260 60 20 / .6);
   --color-neutral-01a: hsl(260 60 20 / .12);
   --color-neutral-02a: hsl(260 60 20 / .08);
   --color-neutral-03a: hsl(260 60 20 / .04);
-  --color-neutral-09a: hsl(260 10 95 / .50);
-  --color-neutral-10a: hsl(260 10 98 / .80);
-  --shadow-bump:
-    .125rem .125rem .25rem var(--color-neutral-03a),
-    .5rem .5rem 1rem var(--color-neutral-03a),
-    -.125rem -.125rem .25rem #fff,
-    -.5rem -.5rem 1rem #fffc;
-  --shadow-bump-1:
-    .125rem .125rem .25rem var(--color-neutral-03a),
-    .5rem .5rem 1rem var(--color-neutral-03a),
-    -.125rem -.125rem .25rem #fff,
-    -.5rem -.5rem 1rem #fffc,
-    inset .25rem .25rem 1rem var(--color-neutral-03a),
-    inset -.25rem -.25rem 1rem #fffc;
-  --shadow-bump-2:
-    .125rem .125rem .25rem var(--color-neutral-03a),
-    .5rem .5rem 1rem var(--color-neutral-03a),
-    -.125rem -.125rem .25rem #fff,
-    -.5rem -.5rem 1rem #fffc,
-    inset .5rem .5rem 1rem var(--color-neutral-02a),
-    inset -.5rem -.5rem 1rem #fffc;
-  --shadow-sink: inset 0 0 .5rem var(--color-neutral-03a);
+  --color-neutral-09a: hsl(260 20 95 / .50);
+  --color-neutral-10a: hsl(260 20 98 / .80);
 }
-.dark {
-  --ch: 40;
-  --csm: -1;
-  --cl005: 95%;
-  --cl010: 90%;
-  --cl020: 85%;
-  --cl030: 80%;
-  --cl040: 70%;
-  --cl050: 60%;
-  --cl060: 60%;
-  --cl070: 50%;
-  --cl080: 40%;
-  --cl090: 25%;
-  --cl095: 15%;
-  --cl100: 10%;
+
+@media (max-width: 60rem) {
+  :root {
+    --padding: 2rem;
+  }
+  html {
+    overflow: hidden auto;
+  }
+  html:has([data-mode]) {
+    overflow: hidden;
+  }
+  #app {
+    position: relative;
+    left: 0;
+    flex-direction: column;
+    transition: var(--transition);
+    transition-property: left;
+  }
+  header {
+    flex: 1;
+  }
+  header h1 {
+    margin: -.125rem 0 0 0;
+    font-size: 2rem;
+    transition: var(--transition);
+    transition-property: opacity;
+  }
+  header h1 span {
+    display: inline-block;
+  }
+  header p {
+    margin: .5rem 0 0;
+  }
+  header p svg {
+    stroke-width: 2.5;
+  }
+  header p a, header p button {
+    position: fixed;
+    bottom: 2rem;
+    left: var(--padding);
+    padding: .5rem;
+    color: var(--color-neutral-030);
+    background: var(--color-neutral-01a);
+    backdrop-filter: blur(.25rem);
+    z-index: 9;
+  }
+  header p a {
+    transform: rotate(180deg);
+  }
+  header:has(+ main [name="save"] article) [name="import"] {
+    transform: translateY(-10rem);
+    opacity: 0;
+    pointer-events: none;
+  }
+  [name="filter"] {
+    display: none;
+  }
+  [name="import"] {
+    position: fixed;
+    inset: 2rem var(--padding) auto;
+    z-index: 1;
+    transform: translateY(-10rem);
+  }
+  [role="log"] {
+    display: none;
+  }
+  main {
+    flex: 1;
+  }
+  main form, .list {
+    position: static;
+    max-height: none;
+  }
+  main form {
+    position: fixed;
+    inset: 0 -10rem 0 10rem;
+    overflow: auto;
+  }
+  [data-mode] #app {
+    left: -10rem;
+  }
+  [data-mode] h1 {
+    opacity: 0;
+  }
+  [data-mode="save"] [name="save"], [data-mode="view"] [name="view"] {
+    inset: 0;
+  }
+  .list {
+    padding: 2rem var(--padding) 5.5rem;
+  }
+  a .book-title {
+    max-width: none;
+  }
+  article .book-cover {
+    flex: 0 0 clamp(6rem, 18vw, 10.7rem);
+    margin: 0 min(2rem, 3vw);
+  }
+  [name="save"] fieldset:empty {
+    position: static;
+    background: none;
+  }
+  [name="view"] footer {
+    left: 5rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  header p a, header p button {
+    left: unset;
+    right: var(--padding);
+  }
+  main {
+    font-size: .9375rem;
+  }
+  a .book-rating {
+    margin: 0 0 1px auto;
+    padding: 0;
+  }
+  a .book-update {
+    display: none;
+  }
+  main form {
+    padding: 0 calc(var(--padding) - .5rem);
+  }
+  [name="save"] nav {
+    display: none;
+  }
+  [name="save"] fieldset {
+    padding: 0;
+  }
+  [name="save"] footer {
+    text-align: left;
+  }
+  [name="view"] fieldset {
+    padding: 0 0 4rem;
+  }
+  [name="view"] footer {
+    left: var(--padding);
+  }
+  [name="view"] footer button {
+    backdrop-filter: blur(.25rem);
+  }
+  [name="view"] .book-cover {
+    position: static;
+  }
+  article {
+    display: block;
+  }
+  article figure, article img {
+    height: max(10rem, 20vw);
+  }
+  article figure {
+    margin: 0 0 .5rem;
+  }
+  article .book-cover {
+    margin: .5rem auto 1rem;
+    padding: 0;
+  }
+}
+
+@media (max-width: 30rem) {
+  :root {
+    --padding: 1.5rem;
+  }
+  a .book-title {
+    max-width: calc(100% - 9rem);
+  }
+  a .book-rating::before {
+    content: attr(data-rating);
+    font-size: .875rem;
+    font-feature-settings: "tnum", var(--font-feature);
+    line-height: 1;
+  }
+  a .book-rating svg {
+    transform: translate(1px, 1px) scale(1.1);
+  }
+  a .book-rating svg:not(:first-child) {
+    display: none;
+  }
+  [data-name="latest"] {
+    max-width: calc(100% - 9rem);
+  }
 }
 
 @keyframes spin {
@@ -798,13 +1154,13 @@ article .book-rating label:has(input:checked):hover ~ label {
   100% { stroke-dasharray:  1 57; stroke-dashoffset: -57; }
 }
 @keyframes shake {
-    0% { transform: translateX(-.75rem); }
-   17% { transform: translateX(.75rem); }
-   33% { transform: translateX(-.5rem); }
-   50% { transform: translateX(.5rem); }
-   67% { transform: translateX(-.25rem); }
-   83% { transform: translateX(.25rem); }
-  100% { transform: translateX(0); }
+    0% { transform: translate(-.75rem); }
+   17% { transform: translate(.75rem); }
+   33% { transform: translate(-.5rem); }
+   50% { transform: translate(.5rem); }
+   67% { transform: translate(-.25rem); }
+   83% { transform: translate(.25rem); }
+  100% { transform: translate(0); }
 }
 
 @font-face {
@@ -820,4 +1176,10 @@ article .book-rating label:has(input:checked):hover ~ label {
   font-weight: 100 900;
   font-display: swap;
   src: local("Inter Variable"), local("InterVariable"), url("https://rsms.me/inter/font-files/InterVariable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Iosevka";
+  font-display: swap;
+  font-weight: 400;
+  src: local("Iosevka Term"), url("iosevka.woff2") format("woff2");
 }
