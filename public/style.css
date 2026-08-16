@@ -24,6 +24,9 @@ html {
   scrollbar-width: thin;
   -webkit-tap-highlight-color: transparent;
 }
+html:has(dialog[open], [data-mode]) {
+  overflow: clip;
+}
 body {
   font: 1rem/1.5 var(--font-sans);
   font-feature-settings: var(--font-feature);
@@ -110,7 +113,6 @@ button {
   display: inline-flex;
   align-items: center;
   background: var(--color-neutral-01a);
-  border-radius: 50%;
   cursor: pointer;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -184,14 +186,15 @@ input::placeholder, textarea::placeholder {
 textarea {
   width: 100%;
   min-height: 9rem;
-  line-height: 1.5;
+  line-height: 1.75;
   resize: none;
 }
 
 #app {
   display: flex;
   justify-content: space-between;
-  overflow: hidden;
+  height: 100dvh;
+  overflow: clip;
 }
 
 dialog::backdrop {
@@ -231,7 +234,6 @@ header {
   display: flex;
   flex-direction: column;
   padding: 2rem var(--padding);
-  height: 100dvh;
 }
 header h1 {
   margin: -.1875rem 0 0 -.05em;
@@ -696,8 +698,10 @@ article .book-rating label:has(input:checked):hover,
 article .book-rating label:has(input:checked):hover ~ label {
   color: hsl(40 100 65);
 }
-[data-name="title"] {
+[data-name="title"][contenteditable] {
   font-size: 1.5rem;
+  line-height: 1.25;
+  padding: .375rem .5rem;
 }
 [data-name="author"] {
   color: var(--color-neutral-040);
@@ -966,21 +970,14 @@ article .book-rating label:has(input:checked):hover ~ label {
   :root {
     --padding: 2rem;
   }
-  html {
-    overflow: hidden auto;
-  }
-  html:has([data-mode]) {
-    overflow: hidden;
-  }
   #app {
     position: relative;
     left: 0;
-    flex-direction: column;
+    display: block;
+    height: auto;
+    overflow: visible;
     transition: var(--transition);
     transition-property: left;
-  }
-  header {
-    flex: 1;
   }
   header h1 {
     margin: -.125rem 0 0 0;
@@ -995,7 +992,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     margin: .5rem 0 0;
   }
   header p svg {
-    stroke-width: 2.5;
+    stroke-width: 2.25;
   }
   header p a, header p button {
     position: fixed;
@@ -1004,6 +1001,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     padding: .5rem;
     color: var(--color-neutral-030);
     background: var(--color-neutral-01a);
+    border-radius: var(--radius);
     backdrop-filter: blur(.25rem);
     z-index: 9;
   }
@@ -1068,10 +1066,6 @@ article .book-rating label:has(input:checked):hover ~ label {
 }
 
 @media (max-width: 40rem) {
-  header p a, header p button {
-    left: unset;
-    right: var(--padding);
-  }
   main {
     font-size: .9375rem;
   }
@@ -1098,10 +1092,16 @@ article .book-rating label:has(input:checked):hover ~ label {
     padding: 0 0 4rem;
   }
   [name="view"] footer {
-    left: var(--padding);
+    left: unset;
+    right: var(--padding);
+    display: flex;
+    gap: .25rem;
   }
   [name="view"] footer button {
     backdrop-filter: blur(.25rem);
+  }
+  [name="view"] footer button:first-child {
+    order: 1;
   }
   [name="view"] .book-cover {
     position: static;
