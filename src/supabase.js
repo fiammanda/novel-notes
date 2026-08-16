@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -6,8 +7,8 @@ const supabase = createClient(
 );
 
 export const db = {
-  async list(full = true) {
-    if (full) {
+  async list(update = false) {
+    if (!update) {
       const { data, error } = await supabase
         .from("novel")
         .select("*")
@@ -42,11 +43,16 @@ export const db = {
     const error = [];
     for (const { id, url, upload } of list) {
       try {
-        const img = await fetch(upload);
-        const bfr = await img.arrayBuffer();
-        const res = await supabase.storage
+        const source = await fetch(upload);
+        const buffer = await source.arrayBuffer();
+        const file = await sharp(buffer)
+          .resize({ width: 400, height: 600, fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toBuffer();
+        const { error: e } = await supabase.storage
           .from("cover")
-          .upload(`${id}.jpg`, bfr, { contentType: "image/jpeg", cacheControl: "2592000" });
+          .upload(`${id}.webp`, file, { contentType: "image/webp", cacheControl: "2592000" });
+        e && error.push({ url, error: e.message });
       } catch (e) {
         error.push({ url, error: e.message });
       }

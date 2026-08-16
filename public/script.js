@@ -2,7 +2,6 @@ gsap.registerPlugin(Flip);
 
 const ref = {
   rtf: new Intl.RelativeTimeFormat("zh", { numeric: "auto" }),
-  base: "https://xomzoomdglxmxgqxmnll.supabase.co/storage/v1/object/public/cover/",
   urls: Object.fromEntries(DATA.map(({ url, title }) => [url, title])),
   list: new Map(DATA.map((item) => [item.id, item])),
   genres: [
@@ -42,7 +41,7 @@ const render = {
           <span class="book-title">${title}</span>
           <span class="book-slash">/</span>
           <span class="book-author">${author}</span>
-          <span class="book-rating" data-rating="${rating}" ${progress === "弃文" ? `data-progress="false"` : ``}>${star.repeat(rating)}</span>
+          <span class="book-rating" data-rating="${rating ?? 0}" ${progress === "弃文" ? `data-progress="false"` : ``}>${star.repeat(rating ?? 0)}</span>
           <span class="book-update">${new Date(update).toLocaleString("sv").slice(0, -3).replace(/(-|:)/g, "<span>$1</span>")}</span>
         </a>
       </li>`;
@@ -59,7 +58,7 @@ const render = {
       html[0] += `<article>
         <div class="book-cover">
           <figure>
-            <img src="https://fly.webp.se/image?url=${cover || upload || `${ref.base}${id}.jpg`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
+            <img src="${cover ? `https://fly.webp.se/image?url=${cover}` : upload || `/img/${id}`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
           </figure>
           <a href="${url}" target="_blank" rel="noopener noreferrer">${new URL(url).hostname}</a>
           <input type="hidden" name="id" value="${id}" />
@@ -114,7 +113,7 @@ const render = {
               </div>
               <div class="book-rating">
                 ${[5, 4, 3, 2, 1].map((i) => `<label>
-                  <input type="radio" name="rating-${index + 1}" data-name="rating" value="${i}" ${rating === i ? "checked " : ""}/>
+                  <input type="radio" name="rating-${index + 1}" data-name="rating" value="${i}" ${rating === i ? "checked" : ""} />
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M12.908 1.581a1 1 0 0 0-1.816 0l-2.87 6.22l-6.801.807a1 1 0 0 0-.562 1.727l5.03 4.65l-1.335 6.72a1 1 0 0 0 1.469 1.067L12 19.426l5.977 3.346a1 1 0 0 0 1.47-1.068l-1.335-6.718l5.029-4.651a1 1 0 0 0-.562-1.727L15.777 7.8z" />
                   </svg>
@@ -178,7 +177,7 @@ document.body.addEventListener("click", (e) => {
 
   if (e.target.closest("[data-nav]")) {
     const nav = e.target.closest("[data-nav]");
-    doc.form.save.firstElementChild.children[nav.dataset.nav].scrollIntoView({ behavior: "smooth" });
+    doc.form.save.set.children[nav.dataset.nav].scrollIntoView({ behavior: "smooth" });
     return;
   }
 });
@@ -204,6 +203,7 @@ document.body.addEventListener("keydown", (e) => {
     li0.parentElement.append(li1);
     li0.textContent = "";
     li0.focus();
+    li0.parentElement.previousElementSibling.value = [...li0.parentElement.children].map((el) => el.textContent).join(" ").trim();
     return;
   }
 
@@ -410,16 +410,16 @@ doc.form.save.addEventListener("reset", (e) => {
 doc.form.save.addEventListener("submit", async (e) => {
   e.preventDefault();
   e.submitter.disabled = true;
-  const data = [...doc.form.save.querySelectorAll("article")].map((article) => {
+  const data = [...doc.form.save.set.querySelectorAll("article")].map((article) => {
     article.querySelector("[type=date]").value
       = [...article.querySelectorAll(".date [type=text]")].map((input) => input.value).join("-");
     const item = Object.fromEntries([...article.querySelectorAll("[data-name], [name]")]
       .filter(el => el.type !== "radio" || el.checked)
-      .map(el => [el.dataset.name || el.dataset, el.value || el.textContent])
+      .map(el => [el.dataset.name || el.name, el.value || el.textContent])
     );
     item.genre = item.genre.split(" ");
     item.words = Number(item.words);
-    item.rating = Number(item.rating);
+    item.rating = Number(item.rating || "3");
     return item;
   });
   const resp = await fetch("/api/data", {

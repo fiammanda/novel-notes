@@ -572,13 +572,13 @@ a .book-update span:last-child {
   pointer-events: none;
 }
 
+[name="view"] fieldset:not(:disabled) + footer button[type="reset"] {
+  color: var(--color-neutral-040);
+  background: hsl(40 100 70 / .8);
+}
 fieldset:disabled + footer button[type="submit"] {
   opacity: 0;
   pointer-events: none;
-}
-fieldset:not(:disabled) + footer button[type="reset"] {
-  color: var(--color-neutral-040);
-  background: hsl(40 100 80);
 }
 fieldset:disabled input:hover, fieldset:disabled textarea:hover,
 fieldset:disabled .date:hover,
@@ -757,7 +757,7 @@ article .book-rating label:has(input:checked):hover ~ label {
   opacity: 0;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.5;
+  stroke-width: 2.25;
 }
 .spinner circle {
   transform-origin: center;
@@ -1086,7 +1086,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     padding: 0;
   }
   [name="save"] footer {
-    text-align: left;
+    text-align: right;
   }
   [name="view"] fieldset {
     padding: 0 0 4rem;

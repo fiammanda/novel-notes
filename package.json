@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "scripts": {},
+  "scripts": {
+    "serve": "vercel dev --listen 0.0.0.0:2223",
+    "start": "node gen.js && vercel dev --listen 0.0.0.0:2223"
+  },
   "keywords": [],
   "author": "fiammanda",
   "license": "ISC",
@@ -11,15 +14,12 @@
   "imports": {
     "#src/*": "./src/*"
   },
-  "scripts": {
-    "serve": "vercel dev --listen 0.0.0.0:2223",
-    "start": "node gen.js && vercel dev --listen 0.0.0.0:2223"
-  },
   "dependencies": {
     "@hono/node-server": "^2.0.12",
     "@supabase/supabase-js": "^2.111.0",
     "cheerio": "^1.2.0",
-    "hono": "^4.12.32"
+    "hono": "^4.12.32",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",

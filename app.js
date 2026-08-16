@@ -15,6 +15,23 @@ const handler = async (c) => {
   });
 };
 
+app.get("/img/:id", async (c) => {
+  const ref = c.req.header("referer");
+  if (!ref || !ref.startsWith("https://1morechapter.vercel.app/")) return c.notFound();
+
+  const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/cover/${c.req.param("id")}.webp`;
+  const res = await fetch(url);
+  if (!res.ok) return c.notFound();
+
+  return new Response(res.body, {
+    status: 200,
+    headers: {
+      "Content-Type": res.headers.get("Content-Type") || "image/webp",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+});
+
 app.use("/*", async (c, next) => {
   const cookie = getCookie(c, "admin") === process.env.ADMIN_COOKIE;
   const secret = c.req.header("authorization") === `Bearer ${process.env.CRON_SECRET}`;
@@ -28,10 +45,10 @@ app.get("/:id{[0-9a-z]{10}}", handler);
 
 app.get("/api/data/update", async (c) => {
   if (!c.get("auth")) return c.notFound();
-  const list = await db.list(false);
-  const info = await scrape(list.map(({ url }) => url));
-  const book = new Map(list.map((item) => [item.id, item]));
-  const data = info.data.map(({ id, words, status, update, latest }) => ({ ...book.get(id), update, latest, status, words }));
+  const list = await db.list(true);
+  const info = await scrape(list.map(({ url }) => url), true);
+  const book = new Map(list.map((item) => [item.url, item]));
+  const data = info.data.map(({ url, ...meta }) => ({ ...book.get(url), ...meta }));
   return c.json(await db.upsert(data));
 });
 

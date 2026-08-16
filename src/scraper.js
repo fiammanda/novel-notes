@@ -54,30 +54,39 @@ const parsers = [
   {
     name: "番茄",
     match(url) {
-      return /^(https:\/\/)?fanqienovel\.com\/page\/\d+$/.test(url);
+      return url.startsWith("https://fanqienovel.com/page/");
     },
-    parse({ $, url }) {
-      const meta = JSON.parse($("script[type='application/ld+json']").html());
+    async parse({ $, url, update }) {
       const data = {
-        id: createHash("md5").update(url).digest("hex").slice(0, 10),
         url,
-        title: $("h1").text().trim(),
-        upload: meta.image[0],
-        author: $(".author-name-text").text().trim(),
         status: normalize.status($(".info-label-yellow").text().trim()),
-        genre: normalize.genre($(".info-label-grey").map((i, el) => $(el).text().trim()).get()),
-        words: Number($(".info-count-word .detail").text().trim()),
-        summary: $(".page-abstract-content").text().trim(),
         update: $(".info-last-time").text().trim() + ":00+08",
         latest: $(".info-last-title").text().trim().slice(5)
       };
-      if (data.status === "连载" && new Date(data.update) < Date.now() - 2592000000) data.status = "停更";
+      if (!update) {
+        const resp = await fetch(`https://api.fqnovel.com/novel_ug/share/landing_page?aid=1967&share_type=11&book_id=${url.slice(29)}`);
+        const { data: { book_data: book } } = await resp.json();
+        Object.assign(data, {
+          id: createHash("md5").update(url).digest("hex").slice(0, 10),
+          title: book.title,
+          upload: book.cover_url,
+          author: book.author.name,
+          genre: normalize.genre(book.category_tags),
+          words: (book.word_count / 10000).toFixed(1),
+          summary: book.intro
+        });
+      } else {
+        data.words = Number($(".info-count-word .detail").text().trim());
+      }
+      if (data.status === "连载" && new Date(data.update) < Date.now() - 2592000000) {
+        data.status = "停更";
+      }
       return data;
     }
   }
 ];
 
-export async function scrape(urls) {
+export async function scrape(urls, update = false) {
   const data = [];
   const error = [];
   for (let url of urls) {
@@ -93,15 +102,15 @@ export async function scrape(urls) {
         continue;
       }
 
-      const res = await fetch(url);
-      if (!res.ok) {
-        error.push({ url, error: `${res.status} ${res.statusText}` });
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        error.push({ url, error: `${resp.status} ${resp.statusText}` });
         continue;
       }
 
-      const html = await res.text();
+      const html = await resp.text();
       const $ = cheerio.load(html);
-      data.push(parser.parse({ $, url }));
+      data.push(await parser.parse({ $, url, update }));
 
       await sleep();
     } catch (e) {
