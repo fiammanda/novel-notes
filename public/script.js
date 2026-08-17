@@ -24,6 +24,7 @@ const doc = {
   button: document.querySelector("header button"),
   dialog: document.querySelector("dialog"),
   log: document.querySelector("[role=log]"),
+  option: document.querySelectorAll("[name=filter] .select:not(.sort) [role=option]")
 };
 
 const render = {
@@ -87,10 +88,11 @@ const render = {
               <div class="select" tabindex="-1">
                 <input readonly type="text" name="status" value="${status}" placeholder="状态">
                 <ul role="listbox">
-                  ${ref.status.map((i) => `<li role="option">${i}</li>`).join("")}
+                  ${ref.status.map((i) => `<li role="option" ${status === i ? `aria-selected="true"` : ``}>${i}</li>`).join("")}
                 </ul>
               </div>
               <div contenteditable="${!disabled}" data-name="words">${words}</div>
+              <div></div>
             </div>
             <div>
               <div class="book-update">${new Date(update).toLocaleDateString("sv").split("-").map((part) => `<span>${part}</span>`).join("-")}</div>
@@ -100,7 +102,7 @@ const render = {
               <div class="select" tabindex="-1">
                 <input readonly type="text" name="progress" value="${progress || ""}" placeholder="进度">
                 <ul role="listbox">
-                  ${ref.progress.map((i) => `<li role="option">${i}</li>`).join("")}
+                  ${ref.progress.map((i) => `<li role="option" ${progress === i ? `aria-selected="true"` : ``}>${i}</li>`).join("")}
                 </ul>
               </div>
               <div class="date">
@@ -146,15 +148,23 @@ document.body.addEventListener("click", (e) => {
     return;
   }
 
-  if (e.target.closest(".select")) {
+  if (e.target.closest(".select") && !e.target.closest("fieldset:disabled")) {
     const select = e.target.closest(".select");
     const option = e.target.closest("[role=option]");
     if (option) {
       const input = select.querySelector("input");
       if (!select.role) {
+        const label = select.querySelector(".label");
+        if (label) {
+          label.dataset.value = option.textContent;
+          label.dataset.key = option.dataset.key;
+          label.dataset.dir = option.dataset.dir;
+        }
         input.value = option.textContent;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         select.blur();
+        select.querySelector("[aria-selected]")?.removeAttribute("aria-selected");
+        option.ariaSelected = true;
       } else if (e.target.closest("button")) {
         const box = select.querySelector("[role=textbox]");
         const state = Flip.getState(option.parentElement.children);
@@ -183,6 +193,11 @@ document.body.addEventListener("click", (e) => {
 });
 
 document.body.addEventListener("keydown", (e) => {
+  if (doc.dialog.open && e.key === "Escape") {
+    e.preventDefault();
+    doc.dialog.requestClose();
+  }
+
   if (location.pathname !== "/" && e.key === "Escape") {
     history.pushState(null, "",  "/");
     navigate();
@@ -233,12 +248,13 @@ document.body.addEventListener("keydown", (e) => {
   }
 });
 
-doc.dialog.addEventListener("toggle", () => {
+doc.dialog.addEventListener("toggle", (e) => {
   if (!doc.dialog.open) return;
-  setTimeout(() => doc.form.auth.removeAttribute("class"), 1);
+  setTimeout(() => doc.form.auth.removeAttribute("class"), 0);
 });
 
 doc.dialog.addEventListener("cancel", (e) => {
+  e.preventDefault();
   doc.form.auth.className = "hidden";
   setTimeout(() => doc.dialog.close(), 200);
 });
@@ -314,25 +330,32 @@ doc.form.auth.addEventListener("submit", async (e) => {
   }
 });
 
-doc.form.filter.addEventListener("compositionstart", () => {
+doc.form.filter.search.addEventListener("compositionstart", () => {
   doc.form.filter.composing = true;
 });
 
-doc.form.filter.addEventListener("compositionend", () => {
+doc.form.filter.search.addEventListener("compositionend", () => {
   doc.form.filter.composing = false;
   doc.form.filter.dispatchEvent(new Event("input"));
 });
 
 doc.form.filter.addEventListener("input", (e) => {
-  if (doc.form.filter.composing) return;
-  clearTimeout(doc.form.filter.debounce);
-  doc.form.filter.debounce = setTimeout(() => {
+  if (e.target.name === "sort") {
+    filter("sort");
+  } else if (e.target.name === "search") {
+    if (doc.form.filter.composing) return;
+    clearTimeout(doc.form.filter.debounce);
+    doc.form.filter.debounce = setTimeout(() => filter(), 100);
+  } else {
     filter();
-  }, 100);
+  }
 });
 
-doc.form.filter.addEventListener("reset", (e) => {
-  filter(true);
+doc.form.filter.addEventListener("reset", () => {
+  doc.option.forEach((el) => {
+    el.ariaSelected = el.hasAttribute("data-placeholder") ? true : null;
+  });
+  filter("reset");
 });
 
 doc.form.filter.addEventListener("submit", (e) => {
@@ -409,7 +432,7 @@ doc.form.save.addEventListener("reset", (e) => {
 
 doc.form.save.addEventListener("submit", async (e) => {
   e.preventDefault();
-  e.submitter.disabled = true;
+  doc.form.save.submit.disabled = true;
   const data = [...doc.form.save.set.querySelectorAll("article")].map((article) => {
     article.querySelector("[type=date]").value
       = [...article.querySelectorAll(".date [type=text]")].map((input) => input.value).join("-");
@@ -443,7 +466,7 @@ doc.form.save.addEventListener("submit", async (e) => {
       doc.form.import.urls.removeAttribute("class");
     }, 200);
   }
-  e.submitter.disabled = false;
+  doc.form.save.submit.disabled = false;
   log(json);
 });
 
@@ -455,7 +478,7 @@ doc.form.view.addEventListener("reset", (e) => {
 
 doc.form.view.addEventListener("submit", async (e) => {
   e.preventDefault();
-  e.submitter.disabled = true;
+  doc.form.view.submit.disabled = true;
   doc.form.view.querySelector("[type=date]").value
     = [...doc.form.view.querySelectorAll(".date [type=text]")].map((input) => input.value).join("-");
   const item = Object.fromEntries([...doc.form.view.set.querySelectorAll("[data-name], [name]")]
@@ -479,21 +502,14 @@ doc.form.view.addEventListener("submit", async (e) => {
     doc.form.view.set.disabled = true;
     doc.form.view.querySelectorAll("[contenteditable]").forEach((el) => el.contentEditable = false);
   }
-  e.submitter.disabled = false;
+  doc.form.view.submit.disabled = false;
 });
 
 window.addEventListener("popstate", () => navigate());
 
-if (location.pathname === "/import") {
-  doc.link.click();
-} else if (location.pathname !== "/") {
-  const a = document.querySelector(`a[href="${location.pathname}"]`);
-  a ? a.click() : history.replaceState(null, "", "/");
-}
+navigate();
 
-doc.form.filter.reset();
-
-setTimeout(() => document.body.removeAttribute("class"), 10);
+setTimeout(() => document.body.removeAttribute("class"), 1);
 
 function log(logs) {
   let html = logs.summary ? `<li class="log-summary">${logs.summary}${logs.error.length ? ":" : ""}</li>` : ``;
@@ -521,41 +537,38 @@ function auth() {
   doc.dialog.dispatchEvent(new Event("cancel"));
 }
 
-function color(img) {
-  const cvs = document.createElement("cvs");
-  const ctx = cvs.getContext("2d");
-  cvs.width = img.naturalWidth / 4;
-  cvs.height = img.naturalHeight / 4;
-  ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
-  const { data } = ctx.getImageData(0, 0, cvs.width, cvs.height);
-  let r = 0, g = 0, b = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    r += data[i];
-    g += data[i + 1];
-    b += data[i + 2];
-  }
-  const n = data.length / 4;
-  const c = "#" + [r, g, b].map(x => Math.round(x / n).toString(16).padStart(2, "0")).join("");
-  img.closest("article").setAttribute("--color", c);
-  return c;
-}
-
-function filter(reset = false) {
-  const filter = Object.fromEntries(new FormData(doc.form.filter));
-  [...doc.list.children].forEach((li) => {
-    if (reset) {
-      li.hidden = false;
-      requestAnimationFrame(() => { li.removeAttribute("class") });
-      return;
-    }
-    const item = ref.list.get(li.dataset.id);
-    const hide = !Object.entries(filter).every(([key, value]) => {
-      if (!value) return true;
-      if (key === "search") return [item.title, item.author, item.summary].some(v => v?.includes(value));
-      return item[key] == value;
+function filter(param) {
+  const list = [...doc.list.children];
+  if (param === "sort") {
+    const state = Flip.getState(list);
+    const { key, dir } = doc.form.filter.sort.nextElementSibling.dataset;
+    list.sort((a, b) => {
+      const va = ref.list.get(a.dataset.id)[key];
+      const vb = ref.list.get(b.dataset.id)[key];
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      let diff = va < vb ? -1 : va > vb ? 1 : 0;
+      return dir === "asc" ? diff : -diff;
     });
-    li.classList.toggle("hidden", hide)
-  });
+    list.forEach((li) => doc.list.append(li));
+    Flip.from(state, { duration: .2 });
+  } else {
+    const { sort, ...filter } = Object.fromEntries(new FormData(doc.form.filter));
+    [...doc.list.children].forEach((li) => {
+      if (param === "reset") {
+        li.hidden = false;
+        requestAnimationFrame(() => { li.removeAttribute("class") });
+        return;
+      }
+      const item = ref.list.get(li.dataset.id);
+      const hide = !Object.entries(filter).every(([key, value]) => {
+        if (!value) return true;
+        if (key === "search") return [item.title, item.author, item.summary].some(v => v?.includes(value));
+        return item[key] == value;
+      });
+      li.classList.toggle("hidden", hide)
+    });
+  }
 }
 
 function relative(date) {
@@ -575,7 +588,30 @@ function relative(date) {
 
 function navigate(path = location.pathname) {
   const line = doc.link.firstElementChild.children;
-  if (path === "/") {
+  const item = ref.list.get(path.slice(1));
+  if (item) {
+    document.body.dataset.mode = "view";
+    doc.form.view.scrollTop = 0;
+    doc.link.href = "/";
+    const line = doc.link.firstElementChild.children;
+    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
+    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
+    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
+    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
+    doc.form.view.firstElementChild.innerHTML = render.save([item]);
+    doc.form.view.querySelectorAll("textarea").forEach((el) => {
+      el.style.height = "0";
+      el.style.height = `${el.scrollHeight}px`;
+    });
+  } else if (path === "/import") {
+    document.body.dataset.mode = "save";
+    doc.link.href = "/";
+    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
+    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
+    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
+    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
+  } else {
+    if (!item && path !== "/page") history.replaceState(null, "", "/");
     delete document.body.dataset.mode;
     if (!document.body.dataset.auth) {
       doc.form.view.set.disabled = true;
@@ -585,26 +621,5 @@ function navigate(path = location.pathname) {
       gsap.to(line[2], { duration: .2, attr: { y2: 12 }});
       gsap.to(line[3], { duration: .2, attr: { y2: 12 }});
     }
-  } else if (path === "/import") {
-    document.body.dataset.mode = "save";
-    doc.link.href = "/";
-    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
-    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
-    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
-    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
-  } else {
-    document.body.dataset.mode = "view";
-    doc.form.view.scrollTop = 0;
-    doc.link.href = "/";
-    const line = doc.link.firstElementChild.children;
-    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
-    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
-    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
-    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
-    doc.form.view.firstElementChild.innerHTML = render.save([ref.list.get(location.pathname.slice(1))]);
-    doc.form.view.querySelectorAll("textarea").forEach((el) => {
-      el.style.height = "0";
-      el.style.height = `${el.scrollHeight}px`;
-    });
   }
 }

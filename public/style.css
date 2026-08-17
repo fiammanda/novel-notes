@@ -10,7 +10,7 @@
 }
 
 ::selection {
-  background: var(--color-neutral-02a);
+  background: var(--color-neutral-03a);
 }
 
 html {
@@ -20,7 +20,7 @@ html {
   cursor: crosshair;
   touch-action: manipulation;
   overscroll-behavior: contain;
-  scrollbar-color: var(--color-neutral-080) transparent;
+  scrollbar-color: var(--color-neutral-04a) transparent;
   scrollbar-width: thin;
   -webkit-tap-highlight-color: transparent;
 }
@@ -37,15 +37,15 @@ body {
 }
 
 a {
-  color: var(--color-neutral-060);
+  color: var(--link-cl, var(--color-neutral-060));
   text-decoration: none;
   cursor: pointer;
   transition: .2s ease-in-out;
   transition-property: color, background, opacity;
-}
-@media (hover: hover) and (pointer: fine) {
-  a:hover {
-    color: var(--color-neutral-030);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--link-cl-hover, var(--color-neutral-030));
+    }
   }
 }
 
@@ -69,7 +69,7 @@ svg {
 }
 path {
   transition: var(--transition);
-  transition-property: opacity;
+  transition-property: opacity, transform;
 }
 
 p {
@@ -85,7 +85,6 @@ form {
   margin: 0;
   padding: 0;
   font-size: .875rem;
-  border-top: 0px solid var(--color-neutral-080);
   transition: var(--transition);
   transition-property: inset, opacity, transform;
 }
@@ -103,8 +102,8 @@ button, input, textarea {
   font-feature-settings: var(--font-feature);
   font-size: .875rem;
   line-height: 1;
-  color: var(--color-neutral-030);
-  background: var(--color-neutral-100);
+  color: var(--input-cl, var(--color-neutral-040));
+  background: var(--input-bg, var(--color-neutral-09a));
   border-radius: var(--radius);
   transition: var(--transition);
   transition-property: color, background, border, opacity;
@@ -112,76 +111,78 @@ button, input, textarea {
 button {
   display: inline-flex;
   align-items: center;
-  background: var(--color-neutral-01a);
+  color: var(--button-cl, var(--color-neutral-040));
+  background: var(--button-bg, var(--color-neutral-03a));
   cursor: pointer;
-}
-@media (hover: hover) and (pointer: fine) {
-  button:hover {
-    color: #fff;
-    background: var(--color-neutral-00a);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--button-cl-hover, #fff);
+      background: var(--button-bg-hover, var(--color-neutral-050));
+    }
   }
-}
-button:active {
-  color: #fff;
-  background: var(--color-neutral-030);
-}
-button:disabled svg:first-child {
-  opacity: 0;
-}
-button:disabled svg:last-child {
-  opacity: 1;
+  &:active {
+      color: var(--button-cl-active, #fff);
+      background: var(--button-bg-active, var(--color-neutral-030));
+  }
+  &:disabled {
+    svg:first-child {
+      opacity: 0;
+    }
+    svg:last-child {
+      opacity: 1;
+    }
+  }
 }
 input {
   height: 1.875rem;
+  &[type="date"] {
+    pointer-events: none;
+  }
+  &[type="radio"] {
+    display: none;
+  }
+  &[type="number"] {
+    appearance: textfield;
+  }
 }
 label input {
-  padding: .5rem 2rem .5rem .5rem;
-}
-input:read-only {
-  caret-color: transparent;
-}
-input[type="number"] {
-  appearance: textfield;
-}
-input[type="radio"] {
-  display: none;
-}
-input[type="date"] {
-  padding: .25rem .25rem .25rem .3125rem;
-  cursor: pointer;
+  padding: .5rem .5rem .5rem 2rem;
 }
 input + .label {
   position: absolute;
   inset: 0 .5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: .5rem;
   color: var(--color-neutral-070);
   pointer-events: none;
-}
-input + .label svg {
-  color: var(--color-neutral-050);
-}
-input + .label::before {
-  transition: var(--transition);
-  transition-property: opacity;
-}
-input:focus + .label::before, input:not(:placeholder-shown) + .label::before {
-  opacity: 0;
-}
-@media (hover: hover) and (pointer: fine) {
-  input:hover, textarea:hover {
-    background: var(--color-neutral-095);
+  &::after {
+    transition: var(--transition);
+    transition-property: opacity;
+  }
+  & svg {
+    color: var(--color-neutral-050);
   }
 }
-input:focus, textarea:focus {
-  background: var(--color-neutral-090);
+input:focus + .label::after, input:not(:placeholder-shown) + .label::after {
+  opacity: 0;
 }
-input:disabled, textarea:disabled {
-  opacity: 1;
-}
-input::placeholder, textarea::placeholder {
-  color: var(--color-neutral-070);
+input, textarea {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--input-bg-hover, var(--color-neutral-03a));
+    }
+  }
+  &:focus {
+    background: var(--input-bg-focus, var(--color-neutral-03a));
+  }
+  &:disabled {
+    opacity: 1;
+    cursor: crosshair;
+  }
+  ::placeholder {
+    color: var(--color-neutral-070);
+  }
 }
 textarea {
   width: 100%;
@@ -212,17 +213,16 @@ dialog form {
 dialog label:has(input[readonly]) {
   animation: shake .6s linear;
 }
-dialog input:disabled + .label svg:first-child {
-  opacity: 0;
-}
-dialog input:disabled + .label svg:last-child {
-  opacity: 1;
-}
 dialog input {
-  background: var(--color-neutral-100) !important;
-}
-dialog .label::before {
-  content: "输入口令";
+  --input-bg: #fff;
+  --input-bg-hover: #fff;
+  --input-bg-focus: #fff;
+  &:disabled {
+    --input-bg: var(--color-neutral-095);
+    & + .label svg:last-child {
+      opacity: 1;
+    }
+  }
 }
 dialog .spinner {
   right: 0;
@@ -256,28 +256,36 @@ header p {
   margin: 1.5rem 0 0;
   font-family: "Yozai", var(--font-sans);
   color: var(--color-neutral-060);
+  --button-cl: var(--color-neutral-060);
+  --button-bg: transparent;
+  --button-cl-hover: #fff;
+  --button-bg-hover: var(--color-neutral-050);
+  --button-cl-active: #fff;
+  --button-bg-active: var(--color-neutral-030);
 }
 header p button, header p a {
   grid-area: 1 / 2;
   display: inline-flex;
   padding: .125rem;
-  background: transparent;
   border-radius: 50%;
-  color: var(--color-neutral-060);
+}
+header p a {
+  color: var(--button-cl);
+  background: var(--button-bg);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--button-cl-hover);
+      background: var(--button-bg-hover);
+    }
+  }
+  &:active {
+    color: var(--button-cl-active);
+    background: var(--button-bg-active);
+  }
 }
 header p button, [data-auth][data-mode] header p button, [data-auth] header p a {
   opacity: 0;
   pointer-events: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  header p a:hover {
-    color: #fff;
-    background: var(--color-neutral-00a);
-  }
-}
-header p a:active {
-  color: #fff;
-  background: var(--color-neutral-030);
 }
 [data-auth] header p button, [data-auth][data-mode="view"] header p a {
   opacity: 1;
@@ -301,47 +309,75 @@ header form {
   transform: translateY(0);
   pointer-events: all;
 }
-[name="filter"] > div {
+[name="filter"] fieldset {
   display: flex;
   gap: .5rem;
   margin: .5rem 0 0;
-}
-[name="filter"] input {
-  width: 12.375rem;
+  --button-cl: var(--color-neutral-070);
+  --button-bg: var(--color-neutral-04a);
 }
 [name="filter"] button {
-  margin: 0 0 0 .75rem;
+  margin: 0 0 0 .5rem;
   padding: .4375rem;
-  color: var(--color-neutral-070);
-  background: var(--color-neutral-100);
-  border-radius: var(--radius);
   pointer-events: none;
 }
-[name="filter"] button:hover {
-  background: var(--color-neutral-050);
-}
-[name="filter"] button:active {
-  background: var(--color-neutral-030);
-}
-[name="filter"]:has(input:not(:placeholder-shown)) button {
-  color: var(--color-neutral-050);
-  background: var(--color-neutral-01a);
+[name="filter"]:has(input[placeholder]:not(:placeholder-shown)) button {
   pointer-events: all;
+  --button-cl: var(--color-neutral-040);
+  --button-bg: var(--color-neutral-03a);
 }
 [name="filter"] .select {
   width: 2.75rem;
-  color: var(--color-neutral-030);
+  color: var(--color-neutral-040);
 }
 [name="filter"] .select [role="listbox"] {
   top: unset;
   bottom: calc(100% + .5rem);
 }
-[name="filter"] .select [role="listbox"],
-[name="filter"] .select:focus-within input {
-  background: var(--color-neutral-090);
+[name="filter"] .sort.select {
+  margin: 0 .5rem 0 0;
+  width: 4.25rem;
+  --input-cl: transparent;
 }
-[name="search"] + .label::before {
-  content: "查询书名作者简介";
+[name="filter"] .sort .label {
+  inset: .4375rem auto .4375rem .5rem;
+  color: inherit;
+}
+[name="filter"] .sort .label::after {
+  content: attr(data-value);
+  opacity: 1;
+}
+[name="filter"] .sort .label[data-dir="asc"] path:first-child {
+  transform: translate(0, .875rem);
+}
+[name="filter"] .sort .label[data-dir="asc"] path:last-child {
+  transform: translate(0, -.875rem);
+}
+[name="filter"] .sort svg {
+  color: var(--color-neutral-050);
+}
+[name="filter"] .sort li {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: 0 .5rem;
+}
+[name="filter"] .sort li::before {
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  background: currentColor;
+  mask: var(--svg) 0 0 / 100% no-repeat;
+  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12H3m0-7h18M9 19H3'/%3E%3C/svg%3E");
+}
+[name="filter"] .sort li[data-dir="asc"]::before {
+  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 19h18m-6-7H3m6-7H3'/%3E%3C/svg%3E");
+}
+[name="search"] {
+  width: max(8rem, 12vw);
+}
+[name="search"] + .label::after {
+  content: "书名 作者 简介";
 }
 [name="urls"] {
   display: block;
@@ -350,19 +386,13 @@ header form {
 }
 [name="urls"].hidden {
   opacity: 1 !important;
-  color: transparent;
+  --input-cl: transparent;
 }
 [name="import"] button {
   position: absolute;
   inset: auto 1rem 1rem auto;
-  color: #fff;
-  background: var(--color-neutral-060);
-}
-[name="import"] button:hover {
-  background: var(--color-neutral-050);
-}
-[name="import"] button:active {
-  background: var(--color-neutral-030);
+  --button-cl: #fff;
+  --button-bg: var(--color-neutral-060);
 }
 [name="import"] button[disabled] path:last-child {
   opacity: 0;
@@ -572,24 +602,21 @@ a .book-update span:last-child {
   pointer-events: none;
 }
 
-[name="view"] fieldset:not(:disabled) + footer button[type="reset"] {
-  color: var(--color-neutral-040);
-  background: hsl(40 100 70 / .8);
+fieldset {
+  --input-cl: currentColor;
+  --input-bg: var(--color-neutral-09a);
+  --input-bg-hover: var(--color-neutral-03a);
+  --input-bg-focus: var(--color-neutral-03a);
 }
 fieldset:disabled + footer button[type="submit"] {
   opacity: 0;
   pointer-events: none;
 }
-fieldset:disabled input:hover, fieldset:disabled textarea:hover,
-fieldset:disabled .date:hover,
-fieldset:disabled [role="textbox"]:hover {
-  background: transparent;
-}
-fieldset:disabled textarea {
-  cursor: crosshair;
-}
 fieldset:disabled .date, fieldset:disabled .select, fieldset:disabled .book-rating {
-  pointer-events: none;
+}
+[name="view"] fieldset:not(:disabled) + footer button[type="reset"] {
+  color: var(--color-neutral-040);
+  background: hsl(40 100 70 / .8);
 }
 
 article {
@@ -597,6 +624,13 @@ article {
   align-items: flex-start;
   gap: var(--padding);
   padding: 1.5rem 0 2rem;
+  --input-bg: transparent;
+  --input-bg-hover: var(--color-neutral-09a);
+  --input-bg-focus: var(--color-neutral-095);
+}
+fieldset:disabled article {
+  --input-bg-hover: transparent;
+  --input-bg-focus: transparent;
 }
 article figure {
   position: relative;
@@ -616,20 +650,10 @@ article img {
   box-shadow: .5rem .5rem .5rem var(--color-neutral-01a);
 }
 article input {
-  padding: .5rem;
-  color: var(--color-neutral-050);
-  background: transparent;
   field-sizing: content;
 }
 article textarea {
   font-size: .9375rem;
-  background: transparent;
-}
-article input:hover, article textarea:hover {
-  background: var(--color-neutral-100);
-}
-article input:focus, article textarea:focus {
-  background: var(--color-neutral-095);
 }
 article .book-cover {
   flex: 0 0 clamp(8rem, 15vw, 10.7rem);
@@ -655,6 +679,9 @@ article .book-meta > div {
   display: flex;
   align-items: center;
   color: var(--color-neutral-050);
+}
+article .book-meta > div:nth-child(1) div:empty {
+  flex: 1;
 }
 article .book-meta > div:nth-child(2)::before {
   content: "更新";
@@ -738,10 +765,10 @@ article .book-rating label:has(input:checked):hover ~ label {
   cursor: text;
 }
 [contenteditable="true"]:hover {
-  background: var(--color-neutral-100);
+  background: var(--input-bg-hover);
 }
 [contenteditable="true"]:focus {
-  background: var(--color-neutral-095);
+  background: var(--input-bg-focus);
 }
 
 .hidden {
@@ -770,22 +797,23 @@ article .book-rating label:has(input:checked):hover ~ label {
   position: relative;
   font-size: .875rem;
   color: var(--color-neutral-050);
-}
-.select[role="combobox"] {
-  margin: .5rem 0;
-  cursor: text;
-}
-.select:focus-within {
-  color: var(--color-neutral-040);
+  background: var(--input-bg);
+  transition: var(--transition);
+  transition-property: background;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--input-bg-hover);
+    }
+  }
+  &:focus-within {
+    background: var(--input-bg-focus);
+  }
 }
 .select input {
   width: 100%;
   text-align: center;
-  cursor: pointer;
-}
-.select:focus-within input {
-  color: var(--color-neutral-040);
-  background: var(--color-neutral-095);
+  background: transparent;
+  backdrop-filter: blur(.25rem);
 }
 .select [role="listbox"] {
   position: absolute;
@@ -796,30 +824,31 @@ article .book-rating label:has(input:checked):hover ~ label {
   border-radius: var(--radius);
   backdrop-filter: blur(.25rem);
   opacity: 0;
+  cursor: crosshair;
+  overflow: clip;
   z-index: 1;
   pointer-events: none;
   transition: var(--transition);
   transition-property: opacity;
 }
-.select:focus-within [role="listbox"] {
-  opacity: 1;
-  pointer-events: all;
-}
 .select [role="option"] {
   text-align: center;
-  border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
   transition-property: background;
 }
 .select [role="option"]:hover {
-  background: var(--color-neutral-02a);
+  background: var(--color-neutral-03a);
 }
-.select [role="option"]:active {
-  box-shadow: var(--shadow-sink);
+.select [role="option"][aria-selected] {
+  background: var(--color-neutral-03a);
+  pointer-events: none;
 }
 .select [data-placeholder]::before {
   content: attr(data-placeholder);
+}
+.select[role="combobox"] {
+  margin: .5rem 0;
 }
 .select[role="combobox"] [role="listbox"] {
   display: flex;
@@ -835,10 +864,13 @@ article .book-rating label:has(input:checked):hover ~ label {
   align-items: center;
   padding: 0 .25rem;
   line-height: 1.5;
-  background: var(--color-neutral-02a);
+  background: var(--color-neutral-03a);
   border-radius: var(--radius);
 }
 .select[role="combobox"] [role="option"]:hover {
+  background: var(--color-neutral-100);
+}
+.select[role="combobox"] [role="listbox"] [role="option"]:hover {
   background: #fff;
 }
 .select[role="combobox"] button {
@@ -847,8 +879,8 @@ article .book-rating label:has(input:checked):hover ~ label {
   padding: 0;
   width: .875rem;
   height: .875rem;
-  color: var(--color-neutral-060);
-  background: transparent;
+  --button-cl: var(--color-neutral-060);
+  --button-bg: transparent;
 }
 .select[role="combobox"] button::before,
 .select[role="combobox"] button::after {
@@ -866,10 +898,6 @@ article .book-rating label:has(input:checked):hover ~ label {
 .select[role="combobox"] button::after {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
-.select[role="combobox"] [role="option"] button:hover {
-  color: var(--color-neutral-040);
-  background: var(--color-neutral-090);
-}
 .select [role="textbox"] {
   display: flex;
   flex-wrap: wrap;
@@ -878,15 +906,6 @@ article .book-rating label:has(input:checked):hover ~ label {
   padding: .5rem;
   border-radius: var(--radius);
   pointer-events: none;
-  transition: var(--transition);
-  transition-property: background, box-shadow;
-}
-.select:hover [role="textbox"] {
-  background: var(--color-neutral-100);
-}
-.select:focus-within [role="textbox"] {
-  background: var(--color-neutral-095);
-  pointer-events: all;
 }
 .select [contenteditable] {
   order: 1;
@@ -894,9 +913,31 @@ article .book-rating label:has(input:checked):hover ~ label {
   min-width: 0;
   background: none;
 }
-.select:focus-within [contenteditable] {
-  padding: 0 .25rem;
-  min-width: 2rem;
+fieldset:not(:disabled) .select {
+  cursor: pointer;
+  &[role="combobox"] {
+    cursor: text;
+  }
+  & input {
+    pointer-events: none;
+  }
+  &:focus-within {
+    color: var(--color-neutral-040);
+    user-select: none;
+    --input-bg: var(--input-bg-hover);
+    & [role="listbox"] {
+      opacity: 1;
+      pointer-events: all;
+    }
+    & [role="textbox"] {
+      cursor: text;
+      pointer-events: all;
+    }
+    & [contenteditable] {
+      padding: 0 .25rem;
+      min-width: 2rem;
+    }
+  }
 }
 
 .date {
@@ -905,15 +946,14 @@ article .book-rating label:has(input:checked):hover ~ label {
   align-items: center;
   padding: .5rem;
   line-height: 1;
-  user-select: none;
   transition: var(--transition);
   transition-property: background;
-}
-.date:hover {
-  background: var(--color-neutral-100);
-}
-.date:focus-within {
-  background: var(--color-neutral-095);
+  &:hover {
+    background: var(--input-bg-hover);
+  }
+  &:focus-within {
+    background: var(--input-bg-focus);
+  }
 }
 .date input {
   padding: 0 1px 0 0;
@@ -921,7 +961,6 @@ article .book-rating label:has(input:checked):hover ~ label {
   font-feature-settings: "tnum", var(--font-feature);
   letter-spacing: -1px;
   caret-color: transparent;
-  cursor: pointer;
 }
 .date input:focus {
   color: #fff;
@@ -936,6 +975,11 @@ article .book-rating label:has(input:checked):hover ~ label {
 @media (hover: hover) and (pointer: fine) {
   .date label {
     display: none;
+  }
+}
+fieldset:not(:disabled) .date {
+  & input {
+    cursor: pointer;
   }
 }
 
@@ -958,10 +1002,11 @@ article .book-rating label:has(input:checked):hover ~ label {
   --color-neutral-090: hsl(260 20 90);
   --color-neutral-095: hsl(265 20 95);
   --color-neutral-100: hsl(270 20 98);
-  --color-neutral-00a: hsl(260 60 20 / .6);
-  --color-neutral-01a: hsl(260 60 20 / .12);
-  --color-neutral-02a: hsl(260 60 20 / .08);
-  --color-neutral-03a: hsl(260 60 20 / .04);
+  --color-neutral-00a: hsl(260 60 20 / .50);
+  --color-neutral-01a: hsl(260 60 20 / .16);
+  --color-neutral-02a: hsl(260 60 20 / .12);
+  --color-neutral-03a: hsl(260 60 20 / .08);
+  --color-neutral-04a: hsl(260 60 20 / .04);
   --color-neutral-09a: hsl(260 20 95 / .50);
   --color-neutral-10a: hsl(260 20 98 / .80);
 }
@@ -990,6 +1035,8 @@ article .book-rating label:has(input:checked):hover ~ label {
   }
   header p {
     margin: .5rem 0 0;
+    --button-cl: var(--color-neutral-040);
+    --button-bg: var(--color-neutral-03a);
   }
   header p svg {
     stroke-width: 2.25;
@@ -998,9 +1045,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     position: fixed;
     bottom: 2rem;
     left: var(--padding);
-    padding: .5rem;
-    color: var(--color-neutral-030);
-    background: var(--color-neutral-01a);
+    padding: .4375rem;
     border-radius: var(--radius);
     backdrop-filter: blur(.25rem);
     z-index: 9;
@@ -1014,7 +1059,20 @@ article .book-rating label:has(input:checked):hover ~ label {
     pointer-events: none;
   }
   [name="filter"] {
+    position: fixed;
+    inset: auto var(--padding) 2rem auto;
+    display: flex;
+    gap: .25rem;
+    z-index: 1;
+  }
+  [name="filter"] fieldset {
+    display: contents;
+  }
+  [name="filter"] label {
     display: none;
+  }
+  [name="filter"] button, [name="filter"] input {
+    backdrop-filter: blur(.25rem);
   }
   [name="import"] {
     position: fixed;
@@ -1047,7 +1105,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     inset: 0;
   }
   .list {
-    padding: 2rem var(--padding) 5.5rem;
+    padding: 2rem var(--padding) 6rem;
   }
   a .book-title {
     max-width: none;
@@ -1055,6 +1113,9 @@ article .book-rating label:has(input:checked):hover ~ label {
   article .book-cover {
     flex: 0 0 clamp(6rem, 18vw, 10.7rem);
     margin: 0 min(2rem, 3vw);
+  }
+  footer button {
+    padding: .4375rem;
   }
   [name="save"] fieldset:empty {
     position: static;
@@ -1110,7 +1171,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     display: block;
   }
   article figure, article img {
-    height: max(10rem, 20vw);
+    height: max(15rem, 20vw);
   }
   article figure {
     margin: 0 0 .5rem;
