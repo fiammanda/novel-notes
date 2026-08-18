@@ -1,4 +1,12 @@
 {
+  "framework": null,
+  "rewrites": [
+    { "source": "/data.js", "destination": "/api" },
+    { "source": "/img/:id", "destination": "/api" },
+    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/import", "destination": "/index.html" },
+    { "source": "/:id([0-9a-z]{10})", "destination": "/index.html" }
+  ],
   "crons": [
     {
       "path": "/api/data/update",

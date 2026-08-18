@@ -1,6 +1,9 @@
+navigator.serviceWorker && navigator.serviceWorker.register("/sw.js");
 gsap.registerPlugin(Flip);
 
 const ref = {
+  nav: false,
+  pwa: window.matchMedia("(display-mode: standalone)").matches,
   rtf: new Intl.RelativeTimeFormat("zh", { numeric: "auto" }),
   urls: Object.fromEntries(DATA.map(({ url, title }) => [url, title])),
   list: new Map(DATA.map((item) => [item.id, item])),
@@ -28,7 +31,7 @@ const doc = {
 doc.form.filter.querySelectorAll("[data-name]").forEach((el) => doc.form.filter[el.dataset.name] = el);
 doc.form.filter.option = doc.form.filter.querySelectorAll("fieldset [role=option]");
 
-if (document.body.dataset.auth === "true") auth();
+if (AUTH) auth();
 
 doc.list.innerHTML = render(DATA, "list");
 
@@ -43,6 +46,7 @@ document.body.addEventListener("click", (e) => {
     e.preventDefault();
     history.pushState(null, "",  e.target.closest("a").href);
     navigate();
+    ref.nav = true;
     return;
   }
 
@@ -128,7 +132,7 @@ document.body.addEventListener("keydown", (e) => {
     if (list.children.length > 1 && sel.isCollapsed && sel.anchorOffset === 0) {
       const last = list.lastElementChild;
       const state = Flip.getState([e.target, last]);
-      last.remove();
+      last.children.length ? last.remove() : list.nextElementSibling.append(last);
       Flip.from(state, { duration: .2 });
     }
     return;
@@ -245,6 +249,7 @@ doc.form.auth.addEventListener("submit", async (e) => {
   const { success } = await resp.json();
   if (success) {
     auth();
+    navigator.serviceWorker?.controller?.postMessage("purge:data");
   } else {
     pass.disabled = false;
     pass.readOnly = true;
@@ -300,11 +305,11 @@ doc.form.import.addEventListener("submit", async (e) => {
       u.hash = "";
       u.search = "";
       ref.urls[u.href]
-        ? logs.error.push({ url: u.href, error: "URL already exists" })
+        ? logs.error.push({ url: u.href, msg: "URL already exists" })
         : urls.push(u.href);
       return u.href;
     } catch (e) {
-      error.push({ url, error: e.message });
+      logs.error.push({ url, msg: e.message });
     }
   });
 
@@ -344,7 +349,7 @@ doc.form.import.addEventListener("submit", async (e) => {
       el.style.height = "0";
       el.style.height = `${el.scrollHeight}px`;
     });
-  }, 1);
+  }, 0);
 });
 
 doc.form.save.addEventListener("reset", (e) => {
@@ -368,11 +373,13 @@ doc.form.save.addEventListener("submit", async (e) => {
   });
   const json = await resp.json();
   if (!json.error.length) {
+    navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA.push(...data);
     data.forEach(item => ref.list.set(item.id, item));
-    doc.list.insertAdjacentHTML("beforeend", render(data, "list"));
     doc.form.save.className = "hidden";
     doc.form.import.urls.className = "hidden";
+    doc.list.insertAdjacentHTML("beforeend", render(data, "list"));
+    filter("sort");
     setTimeout(() => {
       doc.form.save.firstElementChild.replaceChildren();
       doc.form.save.removeAttribute("class");
@@ -404,24 +411,37 @@ doc.form.view.addEventListener("submit", async (e) => {
   });
   const json = await resp.json();
   if (!json.error.length) {
+    navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA[DATA.findIndex(({ id }) => id === item.id)] = item;
     ref.list.set(item.id, item);
     doc.form.view.set.disabled = true;
-    doc.form.view.querySelectorAll("[contenteditable]").forEach((el) => el.contentEditable = false);
+    doc.form.view.querySelectorAll(".select, [contenteditable]").forEach((el) => {
+      el.dataset.tab ? el.removeAttribute("tabindex") : el.setAttribute("contenteditable", "false");
+    });
+    const item = doc.form.view.querySelector(".select li:has(button)");
+    if (item) {
+      const list = [...item.parentElement.children];
+      const state = Flip.getState(list.slice(list.indexOf(item)));
+      item.parentElement.querySelectorAll("button").forEach((button) => button.remove());
+      Flip.from(state, { duration: .2 });
+    }
   }
   doc.form.view.submit.disabled = false;
 });
 
-window.addEventListener("popstate", () => navigate());
+window.addEventListener("popstate", () => {
+  navigate(!ref.pwa || ref.nav);
+  ref.nav = false;
+});
 
 navigate();
 
-setTimeout(() => document.body.removeAttribute("class"), 1);
+setTimeout(() => document.body.removeAttribute("class"), 10);
 
 function log(logs) {
   let html = logs.summary ? `<li class="log-summary">${logs.summary}${logs.error.length ? ":" : ""}</li>` : ``;
   html += logs.error
-    .map(({ error, url }) => `<li class="log-entry"><span>${error}</span> <span>${url || ""}</span></li>`)
+    .map(({ msg, url }) => `<li class="log-entry"><span>${msg}</span> <span>${url || ""}</span></li>`)
     .join("");
   doc.log.className = "hidden";
   setTimeout(() => {
@@ -431,7 +451,6 @@ function log(logs) {
 }
 
 function auth() {
-  delete document.body.dataset.auth;
   const line = doc.link.firstElementChild.children;
   line[0].setAttribute("x1", 12);
   line[0].setAttribute("x2", 12);
@@ -440,7 +459,6 @@ function auth() {
   line[2].setAttribute("y2", 12);
   line[3].setAttribute("y2", 12);
   doc.link.href = "/import";
-  doc.form.auth.passcode.blur();
   doc.dialog.dispatchEvent(new Event("cancel"));
 }
 
@@ -626,9 +644,13 @@ function relative(date) {
   return date.toLocaleDateString("sv");
 }
 
-function navigate(path = location.pathname) {
+function navigate(transition = true, path = location.pathname) {
   const line = doc.link.firstElementChild.children;
   const item = ref.list.get(path.slice(1));
+  if (!transition) {
+    document.body.className = "instant";
+    setTimeout(() => document.body.removeAttribute("class"), 10);
+  }
   if (item) {
     document.body.dataset.mode = "view";
     doc.form.view.scrollTop = 0;
@@ -651,9 +673,9 @@ function navigate(path = location.pathname) {
     gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
     gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
   } else {
-    if (!item && path !== "/page") history.replaceState(null, "", "/");
     delete document.body.dataset.mode;
-    if (!document.body.dataset.auth) {
+    if (path !== "/") history.replaceState(null, "", "/");
+    if (AUTH) {
       doc.form.view.set.disabled = true;
       doc.link.href = "/import";
       gsap.to(line[0], { duration: .2, attr: { x1: 12, x2: 12 }});

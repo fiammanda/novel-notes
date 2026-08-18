@@ -2,10 +2,9 @@
   "name": "novel-notes",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "api/index.js",
   "scripts": {
-    "serve": "vercel dev --listen 0.0.0.0:2223",
-    "start": "node gen.js && vercel dev --listen 0.0.0.0:2223"
+    "serve": "vercel dev --listen 0.0.0.0:2223"
   },
   "keywords": [],
   "author": "fiammanda",

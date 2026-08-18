@@ -1,28 +1,34 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
-import { serveStatic } from "@hono/node-server/serve-static";
-import { db } from "#src/supabase.js";
-import { page } from "#src/page.js";
 import { scrape } from "#src/scraper.js";
+import { db } from "#src/supabase.js";
 
 const app = new Hono();
 
-const handler = async (c) => {
-  return c.html(page(c.get("auth"), await db.list()), {
-    headers: {
-      "Cache-Control": "maxage=300, s-maxage=300, stale-while-revalidate=1800",
-    },
+app.use("/*", async (c, next) => {
+  const ref = c.req.header("referer");
+  const cookie = getCookie(c, "admin") === process.env.ADMIN_COOKIE;
+  const secret = c.req.header("authorization") === `Bearer ${process.env.CRON_SECRET}`;
+  c.set("auth", cookie ? "cookie" : secret ? "secret" : null);
+  c.set("same-site", URL.canParse(ref) && new URL(ref).origin === new URL(c.req.url).origin);
+  await next();
+});
+
+app.get("/data.js", async (c) => {
+  if (!c.get("same-site")) return c.notFound();
+  const data = await db.list();
+  const auth = c.get("auth");
+  return c.body(`window.AUTH=${JSON.stringify(auth)};window.DATA=${JSON.stringify(data)};`, 200, {
+    "Content-Type": "application/javascript; charset=UTF-8",
+    "Cache-Control": "public, max-age=600, s-maxage=300, stale-while-revalidate=3600"
   });
-};
+});
 
 app.get("/img/:id", async (c) => {
-  const ref = c.req.header("referer");
-  if (!ref || !ref.startsWith("https://1morechapter.vercel.app/")) return c.notFound();
-
+  if (!c.get("same-site")) return c.notFound();
   const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/cover/${c.req.param("id")}.webp`;
   const res = await fetch(url);
   if (!res.ok) return c.notFound();
-
   return new Response(res.body, {
     status: 200,
     headers: {
@@ -31,17 +37,6 @@ app.get("/img/:id", async (c) => {
     },
   });
 });
-
-app.use("/*", async (c, next) => {
-  const cookie = getCookie(c, "admin") === process.env.ADMIN_COOKIE;
-  const secret = c.req.header("authorization") === `Bearer ${process.env.CRON_SECRET}`;
-  c.set("auth", cookie || secret);
-  await next();
-});
-
-app.get("/", handler);
-app.get("/import", handler);
-app.get("/:id{[0-9a-z]{10}}", handler);
 
 app.get("/api/data/update", async (c) => {
   if (!c.get("auth")) return c.notFound();
@@ -53,13 +48,13 @@ app.get("/api/data/update", async (c) => {
 });
 
 app.post("/api/data/meta", async (c) => {
-  if (!c.get("auth")) c.json({ error: "Unauthorized" }, 401);
+  if (!c.get("auth")) return c.json({ error: "Unauthorized" }, 401);
   const data = await c.req.json();
   return c.json(await scrape(data));
 });
 
 app.post("/api/data", async (c) => {
-  if (!c.get("auth")) c.json({ error: "Unauthorized" }, 401);
+  if (!c.get("auth")) return c.json({ error: "Unauthorized" }, 401);
   const res = [];
   const data = await c.req.json();
   const novel = data.map(({ upload, ...book }) => book);
@@ -69,7 +64,7 @@ app.post("/api/data", async (c) => {
   res[0] = await db.upsert(novel);
   res[0].success
     ? summary.push(`${data.length} novel${data.length === 1 ? "" : "s"} ${res[0].status === 200 ? "updated" : "imported"}`)
-    : error.push({ error: res[0].error.message });
+    : error.push({ msg: res[0].error.message });
   if (cover.length) {
     res[1] = await db.upload(cover);
     const count = cover.length - res[1].error.length;

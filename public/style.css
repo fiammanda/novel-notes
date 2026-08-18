@@ -8,9 +8,8 @@
   outline: none;
   box-sizing: border-box;
 }
-
 ::selection {
-  background: var(--color-neutral-03a);
+  background: hsl(40 90 96);
 }
 
 html {
@@ -20,7 +19,7 @@ html {
   cursor: crosshair;
   touch-action: manipulation;
   overscroll-behavior: contain;
-  scrollbar-color: var(--color-neutral-04a) transparent;
+  scrollbar-color: var(--color-neutral-01a) transparent;
   scrollbar-width: thin;
   -webkit-tap-highlight-color: transparent;
 }
@@ -191,18 +190,20 @@ input, textarea {
   }
 }
 textarea {
+  display: block;
   width: 100%;
   min-height: 9rem;
   line-height: 1.5;
   resize: none;
 }
 
+.instant .list, .instant form {
+  transition-duration: 0s;
+}
+
 .hidden {
   opacity: 0 !important;
   pointer-events: none !important;
-  & .list, form {
-    transition-duration: 0s;
-  }
 }
 
 .spinner {
@@ -533,7 +534,7 @@ header form {
 }
 [data-mode="save"] [name="import"] {
   opacity: 1;
-  transform: translate(0);
+  transform: none;
   pointer-events: auto;
 }
 
@@ -845,7 +846,7 @@ fieldset:disabled .date {
 article {
   display: flex;
   align-items: flex-start;
-  gap: var(--padding);
+  gap: calc(var(--padding) + 1rem);
   padding: 1.5rem 0 2rem;
   --input-cl: currentColor;
   --input-bg: transparent;
@@ -868,6 +869,13 @@ article figure::before {
 article img {
   position: relative;
   box-shadow: .5rem .5rem .5rem var(--color-neutral-01a);
+  transition: var(--transition);
+  transition-property: transform;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
 }
 article textarea {
   font-size: .9375rem;
@@ -1005,9 +1013,8 @@ article .book-rating label:has(input:checked):hover ~ label {
   --color-neutral-090: hsl(260 20 90);
   --color-neutral-095: hsl(265 20 95);
   --color-neutral-100: hsl(270 20 99);
-  --color-neutral-00a: hsl(260 60 20 / .50);
-  --color-neutral-01a: hsl(260 60 20 / .16);
-  --color-neutral-02a: hsl(260 60 20 / .12);
+  --color-neutral-01a: hsl(260 60 30 / .15);
+  --color-neutral-02a: hsl(260 60 20 / .10);
   --color-neutral-03a: hsl(260 60 20 / .08);
   --color-neutral-04a: hsl(260 60 20 / .04);
   --color-neutral-09a: hsl(260 20 95 / .50);
@@ -1059,11 +1066,6 @@ article .book-rating label:has(input:checked):hover ~ label {
   header p a {
     transform: rotate(180deg);
   }
-  header:has(+ main [name="save"] article) [name="import"] {
-    transform: translate(0, -10rem);
-    opacity: 0;
-    pointer-events: none;
-  }
   [data-mode] [name="filter"] {
     transform: translate(-10rem);
   }
@@ -1076,21 +1078,29 @@ article .book-rating label:has(input:checked):hover ~ label {
     @media (display-mode: standalone) {
       bottom: 3rem;
     }
-  }
-  [name="filter"] fieldset {
-    display: contents;
-  }
-  [name="filter"] label {
-    display: none;
-  }
-  [name="filter"] button, [name="filter"] input {
-    backdrop-filter: blur(.25rem);
+    & fieldset {
+      display: contents;
+    }
+    & label {
+      display: none;
+    }
+    & button {
+      margin: 0;
+    }
+    & button, input {
+      backdrop-filter: blur(.25rem);
+    }
   }
   [name="import"] {
     position: fixed;
     inset: 2rem var(--padding) auto;
     z-index: 1;
+    transform: translate(10rem);
+  }
+  header:has(+ main [name="save"] article) [name="import"] {
     transform: translate(0, -10rem);
+    opacity: 0;
+    pointer-events: none;
   }
   [role="log"] {
     display: none;
@@ -1171,16 +1181,15 @@ article .book-rating label:has(input:checked):hover ~ label {
     padding: 0 0 4rem;
   }
   [name="view"] footer {
+    position: sticky;
     left: unset;
-    right: var(--padding);
     display: flex;
+    flex-direction: row-reverse;
     gap: .25rem;
+    padding: 0 .5rem;
   }
   [name="view"] footer button {
     backdrop-filter: blur(.25rem);
-  }
-  [name="view"] footer button:first-child {
-    order: 1;
   }
   [name="view"] .book-cover {
     position: static;
@@ -1214,7 +1223,7 @@ article .book-rating label:has(input:checked):hover ~ label {
     line-height: 1;
   }
   a .book-rating svg {
-    transform: translate(1px, 1px) scale(1.1);
+    transform: translate(1px) scale(1.1);
   }
   a .book-rating svg:not(:first-child) {
     display: none;
@@ -1249,7 +1258,6 @@ article .book-rating label:has(input:checked):hover ~ label {
 }
 @font-face {
   font-family: "Inter";
-  font-style: normal;
   font-weight: 100 900;
   font-display: swap;
   src: local("Inter Variable"), local("InterVariable"), url("https://rsms.me/inter/font-files/InterVariable.woff2") format("woff2");
@@ -1257,6 +1265,5 @@ article .book-rating label:has(input:checked):hover ~ label {
 @font-face {
   font-family: "Iosevka";
   font-display: swap;
-  font-weight: 400;
-  src: local("Iosevka Term"), url("iosevka.woff2") format("woff2");
+  src: local("Iosevka Term"), local("Sarasa Term SC"), url("iosevka.woff2") format("woff2");
 }

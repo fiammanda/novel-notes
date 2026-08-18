@@ -24,14 +24,6 @@ export const db = {
     }
   },
 
-  async delete(id) {
-    return supabase
-      .from("novel")
-      .delete()
-      .eq("id", id);
-    if (error) console.error(error);
-  },
-
   async upsert(list) {
     const result = await supabase
       .from("novel")
@@ -52,9 +44,9 @@ export const db = {
         const { error: e } = await supabase.storage
           .from("cover")
           .upload(`${id}.webp`, file, { contentType: "image/webp", cacheControl: "2592000" });
-        e && error.push({ url, error: e.message });
+        e && error.push({ url, msg: e.message });
       } catch (e) {
-        error.push({ url, error: e.message });
+        error.push({ url, msg: e.message });
       }
     }
     return { error };
