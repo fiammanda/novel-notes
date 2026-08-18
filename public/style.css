@@ -125,6 +125,7 @@ button {
       background: var(--button-bg-active, var(--color-neutral-030));
   }
   &:disabled {
+    pointer-events: none;
     svg:first-child {
       opacity: 0;
     }
@@ -147,21 +148,25 @@ input {
 }
 label input {
   padding: .5rem .5rem .5rem 2rem;
-}
-input + .label {
-  position: absolute;
-  inset: 0 .5rem;
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  color: var(--color-neutral-070);
-  pointer-events: none;
-  &::after {
-    transition: var(--transition);
-    transition-property: opacity;
+  &::placeholder {
+    color: transparent;
   }
-  & svg {
-    color: var(--color-neutral-050);
+  + .label {
+    position: absolute;
+    inset: 0 .5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--color-neutral-070);
+    pointer-events: none;
+    &::after {
+      content: attr(aria-label);
+      transition: var(--transition);
+      transition-property: opacity;
+    }
+    & svg {
+      color: var(--color-neutral-050);
+    }
   }
 }
 input:focus + .label::after, input:not(:placeholder-shown) + .label::after {
@@ -179,6 +184,7 @@ input, textarea {
   &:disabled {
     opacity: 1;
     cursor: crosshair;
+    background: transparent;
   }
   ::placeholder {
     color: var(--color-neutral-070);
@@ -187,8 +193,229 @@ input, textarea {
 textarea {
   width: 100%;
   min-height: 9rem;
-  line-height: 1.75;
+  line-height: 1.5;
   resize: none;
+}
+
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  & .list, form {
+    transition-duration: 0s;
+  }
+}
+
+.spinner {
+  position: absolute;
+  opacity: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  & circle {
+    transform-origin: center;
+    animation:
+      spin 2s linear infinite,
+      dash 2s ease-in-out infinite;
+  }
+}
+
+.select {
+  position: relative;
+  width: fit-content;
+  font-size: .875rem;
+  color: var(--color-neutral-050);
+  transition: var(--transition);
+  transition-property: color;
+  & [aria-placeholder]:empty:after {
+    content: attr(aria-placeholder);
+    color: var(--color-neutral-070);
+  }
+  & [aria-label]:empty:after {
+    content: attr(aria-label);
+    color: var(--color-neutral-060);
+  }
+  & span {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 0 .5rem;
+    line-height: 1.875rem;
+    background: var(--input-bg);
+    border-radius: var(--radius);
+    backdrop-filter: blur(.25rem);
+    transition: var(--transition);
+    transition-property: background;
+  }
+  & ul {
+    border-radius: var(--radius);
+    pointer-events: none;
+    transition: var(--transition);
+  }
+  & ul:last-child {
+    position: absolute;
+    top: calc(100% + .5rem);
+    width: 100%;
+    line-height: 1.875rem;
+    background: var(--color-neutral-09a);
+    backdrop-filter: blur(.25rem);
+    opacity: 0;
+    overflow: clip;
+    z-index: 1;
+    transition-property: opacity;
+  }
+  &[tabindex="0"] {
+    & [aria-selected="true"] {
+      pointer-events: none;
+      background: var(--color-neutral-03a);
+    }
+  }
+  &[data-tab="-1"] {
+    margin: .5rem 0;
+    width: 100%;
+    & ul {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .25rem;
+      padding: .5rem;
+    }
+    & [role="option"] {
+      padding: .25rem;
+      line-height: 1;
+      background: var(--color-neutral-03a);
+      border-radius: var(--radius);
+    }
+    & [role="option"]:has(button) {
+      display: flex;
+      align-items: center;
+      gap: .125rem;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      & [role="option"]:has(button:hover) {
+        background: var(--color-neutral-02a) !important;
+      }
+    }
+  }
+  & ul:first-child {
+    background: var(--input-bg);
+    transition-property: background;
+    & [contenteditable] {
+      order: 1;
+      padding: .25rem;
+      &:empty {
+        padding: .25rem 0;
+      }
+    }
+  }
+  & [role="option"] {
+    text-align: center;
+    transition: var(--transition);
+    transition-property: background;
+  }
+}
+.select[tabindex] {
+  &[tabindex="-1"], ul:first-child {
+    cursor: text;
+  }
+  & span, [role="option"] {
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      --input-bg: var(--input-bg-hover);
+    }
+  }
+  &:focus-within {
+    color: var(--color-neutral-040);
+    user-select: none;
+    --input-bg: var(--input-bg-focus);
+    & ul {
+      pointer-events: auto;
+    }
+    & ul:last-child {
+      opacity: 1;
+    }
+    & [contenteditable] {
+      padding: .25rem !important;
+    }
+    & [role="option"] {
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: var(--color-neutral-03a);
+        }
+      }
+    }
+    &[tabindex="-1"] [role="option"] {
+      background: var(--color-neutral-02a);
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: var(--color-neutral-100);
+        }
+      }
+    }
+  }
+}
+.select li button {
+  justify-content: center;
+  padding: 0;
+  width: .75rem;
+  height: .75rem;
+  --button-cl: var(--color-neutral-060);
+  --button-bg: transparent;
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    width: .5rem;
+    height: .0625rem;
+    background: currentColor;
+    transform: rotate(-45deg);
+  }
+  &::before {
+    transform: rotate(45deg);
+  }
+}
+
+.date {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: .5rem;
+  line-height: 1;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  transition-property: background;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--input-bg-hover);
+    }
+  }
+  &:focus-within {
+    background: var(--input-bg-focus);
+  }
+  & span {
+    padding: 0 1px 0 0;
+    height: .875rem;
+    font-feature-settings: "tnum", var(--font-feature);
+    letter-spacing: -1px;
+    caret-color: transparent;
+    &[contenteditable="true"] {
+      cursor: pointer;
+    }
+    &:focus {
+      color: #fff;
+      background: var(--color-neutral-050);
+    }
+  }
+  & label {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    text-align: center;
+    @media (hover: hover) and (pointer: fine) {
+      display: none;
+    }
+  }
 }
 
 #app {
@@ -289,7 +516,7 @@ header p button, [data-auth][data-mode] header p button, [data-auth] header p a 
 }
 [data-auth] header p button, [data-auth][data-mode="view"] header p a {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 header form {
@@ -298,86 +525,82 @@ header form {
 }
 [data-mode] [name="filter"], [name="import"] {
   opacity: 0;
-  transform: translateY(-5rem);
+  transform: translate(0, -5rem);
   pointer-events: none;
 }
 [name="import"] {
-  transform: translateY(5rem);
+  transform: translate(0, 5rem);
 }
 [data-mode="save"] [name="import"] {
   opacity: 1;
-  transform: translateY(0);
-  pointer-events: all;
+  transform: translate(0);
+  pointer-events: auto;
 }
-[name="filter"] fieldset {
-  display: flex;
-  gap: .5rem;
-  margin: .5rem 0 0;
+
+[name="filter"] {
   --button-cl: var(--color-neutral-070);
   --button-bg: var(--color-neutral-04a);
-}
-[name="filter"] button {
-  margin: 0 0 0 .5rem;
-  padding: .4375rem;
-  pointer-events: none;
-}
-[name="filter"]:has(input[placeholder]:not(:placeholder-shown)) button {
-  pointer-events: all;
-  --button-cl: var(--color-neutral-040);
-  --button-bg: var(--color-neutral-03a);
+  & fieldset {
+    display: flex;
+    gap: .5rem;
+    margin: .5rem 0 0;
+    &:has(input:not(:placeholder-shown), [role="combobox"]:not(:empty)) button {
+      pointer-events: auto;
+      --button-cl: var(--color-neutral-040);
+      --button-bg: var(--color-neutral-03a);
+    }
+  }
+  & button {
+    margin: 0 0 0 .5rem;
+    padding: .4375rem;
+    pointer-events: none;
+  }
 }
 [name="filter"] .select {
-  width: 2.75rem;
   color: var(--color-neutral-040);
+  --input-cl: currentColor;
+  --input-bg: var(--color-neutral-09a);
+  --input-bg-hover: var(--color-neutral-03a);
+  --input-bg-focus: var(--color-neutral-03a);
 }
 [name="filter"] .select [role="listbox"] {
   top: unset;
   bottom: calc(100% + .5rem);
 }
-[name="filter"] .sort.select {
+[name="filter"] > .select {
   margin: 0 .5rem 0 0;
-  width: 4.25rem;
-  --input-cl: transparent;
+  & [aria-label]::after {
+    content: attr(aria-label);
+  }
+  & [role="option"] {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 0 .5rem;
+    &::before {
+      content: "";
+      height: 1rem;
+      width: 1rem;
+      background: currentColor;
+      mask: var(--svg) 0 0 / 100% no-repeat;
+      --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12H3m0-7h18M9 19H3'/%3E%3C/svg%3E");
+    }
+    &[data-dir="asc"]::before {
+      --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 19h18m-6-7H3m6-7H3'/%3E%3C/svg%3E");
+    }
+  }
 }
-[name="filter"] .sort .label {
-  inset: .4375rem auto .4375rem .5rem;
-  color: inherit;
-}
-[name="filter"] .sort .label::after {
-  content: attr(data-value);
-  opacity: 1;
-}
-[name="filter"] .sort .label[data-dir="asc"] path:first-child {
+[name="filter"] [data-dir="asc"] path:first-child {
   transform: translate(0, .875rem);
 }
-[name="filter"] .sort .label[data-dir="asc"] path:last-child {
+[name="filter"] [data-dir="asc"] path:last-child {
   transform: translate(0, -.875rem);
 }
 [name="filter"] .sort svg {
   color: var(--color-neutral-050);
 }
-[name="filter"] .sort li {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: 0 .5rem;
-}
-[name="filter"] .sort li::before {
-  content: "";
-  height: 1rem;
-  width: 1rem;
-  background: currentColor;
-  mask: var(--svg) 0 0 / 100% no-repeat;
-  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12H3m0-7h18M9 19H3'/%3E%3C/svg%3E");
-}
-[name="filter"] .sort li[data-dir="asc"]::before {
-  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 19h18m-6-7H3m6-7H3'/%3E%3C/svg%3E");
-}
 [name="search"] {
   width: max(8rem, 12vw);
-}
-[name="search"] + .label::after {
-  content: "书名 作者 简介";
 }
 [name="urls"] {
   display: block;
@@ -447,9 +670,10 @@ main form {
   content: "没搜到哦 (._.)";
   position: absolute;
   color: var(--color-neutral-070);
+  opacity: 0;
+  pointer-events: none;
   transition: var(--transition);
   transition-property: opacity;
-  opacity: 0;
 }
 .list:not(:has(> :not(.hidden)))::after {
   opacity: 1;
@@ -462,7 +686,7 @@ main form {
 [data-mode="save"] [name="save"], [data-mode="view"] [name="view"] {
   opacity: 1;
   inset: 0;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 .list li {
@@ -602,21 +826,20 @@ a .book-update span:last-child {
   pointer-events: none;
 }
 
-fieldset {
-  --input-cl: currentColor;
-  --input-bg: var(--color-neutral-09a);
-  --input-bg-hover: var(--color-neutral-03a);
-  --input-bg-focus: var(--color-neutral-03a);
+[name="view"] fieldset:not(:disabled) + footer button[type="reset"] {
+  color: var(--color-neutral-040);
+  background: hsl(40 100 70 / .8);
 }
 fieldset:disabled + footer button[type="submit"] {
   opacity: 0;
   pointer-events: none;
 }
-fieldset:disabled .date, fieldset:disabled .select, fieldset:disabled .book-rating {
+fieldset:disabled .book-rating {
+  pointer-events: none;
 }
-[name="view"] fieldset:not(:disabled) + footer button[type="reset"] {
-  color: var(--color-neutral-040);
-  background: hsl(40 100 70 / .8);
+fieldset:disabled .date {
+  cursor: crosshair;
+  background: transparent;
 }
 
 article {
@@ -624,13 +847,10 @@ article {
   align-items: flex-start;
   gap: var(--padding);
   padding: 1.5rem 0 2rem;
+  --input-cl: currentColor;
   --input-bg: transparent;
   --input-bg-hover: var(--color-neutral-09a);
   --input-bg-focus: var(--color-neutral-095);
-}
-fieldset:disabled article {
-  --input-bg-hover: transparent;
-  --input-bg-focus: transparent;
 }
 article figure {
   position: relative;
@@ -649,11 +869,9 @@ article img {
   position: relative;
   box-shadow: .5rem .5rem .5rem var(--color-neutral-01a);
 }
-article input {
-  field-sizing: content;
-}
 article textarea {
   font-size: .9375rem;
+  line-height: 1.75;
 }
 article .book-cover {
   flex: 0 0 clamp(8rem, 15vw, 10.7rem);
@@ -750,16 +968,13 @@ article .book-rating label:has(input:checked):hover ~ label {
   border-bottom: .125rem solid var(--color-neutral-090);
   border-radius: 0;
 }
-[name="review"]:focus {
-  background: var(--color-neutral-03a);
-}
 
 [contenteditable] {
   padding: .5rem;
   line-height: 1;
   border-radius: var(--radius);
   transition: var(--transition);
-  transition-property: background;
+  transition-property: color, background;
 }
 [contenteditable="true"] {
   cursor: text;
@@ -769,218 +984,6 @@ article .book-rating label:has(input:checked):hover ~ label {
 }
 [contenteditable="true"]:focus {
   background: var(--input-bg-focus);
-}
-
-.hidden {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-.hidden .list, .hidden form {
-  transition-duration: 0s;
-}
-
-.spinner {
-  position: absolute;
-  opacity: 0;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.25;
-}
-.spinner circle {
-  transform-origin: center;
-  animation:
-    spin 2s linear infinite,
-    dash 2s ease-in-out infinite;
-}
-
-.select {
-  position: relative;
-  font-size: .875rem;
-  color: var(--color-neutral-050);
-  background: var(--input-bg);
-  transition: var(--transition);
-  transition-property: background;
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background: var(--input-bg-hover);
-    }
-  }
-  &:focus-within {
-    background: var(--input-bg-focus);
-  }
-}
-.select input {
-  width: 100%;
-  text-align: center;
-  background: transparent;
-  backdrop-filter: blur(.25rem);
-}
-.select [role="listbox"] {
-  position: absolute;
-  top: calc(100% + .5rem);
-  width: 100%;
-  line-height: 1.875rem;
-  background: var(--color-neutral-09a);
-  border-radius: var(--radius);
-  backdrop-filter: blur(.25rem);
-  opacity: 0;
-  cursor: crosshair;
-  overflow: clip;
-  z-index: 1;
-  pointer-events: none;
-  transition: var(--transition);
-  transition-property: opacity;
-}
-.select [role="option"] {
-  text-align: center;
-  cursor: pointer;
-  transition: var(--transition);
-  transition-property: background;
-}
-.select [role="option"]:hover {
-  background: var(--color-neutral-03a);
-}
-.select [role="option"][aria-selected] {
-  background: var(--color-neutral-03a);
-  pointer-events: none;
-}
-.select [data-placeholder]::before {
-  content: attr(data-placeholder);
-}
-.select[role="combobox"] {
-  margin: .5rem 0;
-}
-.select[role="combobox"] [role="listbox"] {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
-  gap: .25rem;
-  padding: .5rem;
-  cursor: crosshair;
-}
-.select[role="combobox"] [role="option"] {
-  display: flex;
-  align-items: center;
-  padding: 0 .25rem;
-  line-height: 1.5;
-  background: var(--color-neutral-03a);
-  border-radius: var(--radius);
-}
-.select[role="combobox"] [role="option"]:hover {
-  background: var(--color-neutral-100);
-}
-.select[role="combobox"] [role="listbox"] [role="option"]:hover {
-  background: #fff;
-}
-.select[role="combobox"] button {
-  position: relative;
-  left: .1rem;
-  padding: 0;
-  width: .875rem;
-  height: .875rem;
-  --button-cl: var(--color-neutral-060);
-  --button-bg: transparent;
-}
-.select[role="combobox"] button::before,
-.select[role="combobox"] button::after {
-  content: "";
-  position: absolute;
-  width: .5rem;
-  height: .0625rem;
-  background: currentColor;
-  top: 50%;
-  left: 50%;
-}
-.select[role="combobox"] button::before {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-.select[role="combobox"] button::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-.select [role="textbox"] {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .25rem;
-  padding: .5rem;
-  border-radius: var(--radius);
-  pointer-events: none;
-}
-.select [contenteditable] {
-  order: 1;
-  padding: 0;
-  min-width: 0;
-  background: none;
-}
-fieldset:not(:disabled) .select {
-  cursor: pointer;
-  &[role="combobox"] {
-    cursor: text;
-  }
-  & input {
-    pointer-events: none;
-  }
-  &:focus-within {
-    color: var(--color-neutral-040);
-    user-select: none;
-    --input-bg: var(--input-bg-hover);
-    & [role="listbox"] {
-      opacity: 1;
-      pointer-events: all;
-    }
-    & [role="textbox"] {
-      cursor: text;
-      pointer-events: all;
-    }
-    & [contenteditable] {
-      padding: 0 .25rem;
-      min-width: 2rem;
-    }
-  }
-}
-
-.date {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: .5rem;
-  line-height: 1;
-  transition: var(--transition);
-  transition-property: background;
-  &:hover {
-    background: var(--input-bg-hover);
-  }
-  &:focus-within {
-    background: var(--input-bg-focus);
-  }
-}
-.date input {
-  padding: 0 1px 0 0;
-  height: .875rem;
-  font-feature-settings: "tnum", var(--font-feature);
-  letter-spacing: -1px;
-  caret-color: transparent;
-}
-.date input:focus {
-  color: #fff;
-  background: var(--color-neutral-050);
-}
-.date label {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  text-align: center;
-}
-@media (hover: hover) and (pointer: fine) {
-  .date label {
-    display: none;
-  }
-}
-fieldset:not(:disabled) .date {
-  & input {
-    cursor: pointer;
-  }
 }
 
 :root {
@@ -1001,7 +1004,7 @@ fieldset:not(:disabled) .date {
   --color-neutral-080: hsl(255 18 80);
   --color-neutral-090: hsl(260 20 90);
   --color-neutral-095: hsl(265 20 95);
-  --color-neutral-100: hsl(270 20 98);
+  --color-neutral-100: hsl(270 20 99);
   --color-neutral-00a: hsl(260 60 20 / .50);
   --color-neutral-01a: hsl(260 60 20 / .16);
   --color-neutral-02a: hsl(260 60 20 / .12);
@@ -1049,14 +1052,20 @@ fieldset:not(:disabled) .date {
     border-radius: var(--radius);
     backdrop-filter: blur(.25rem);
     z-index: 9;
+    @media (display-mode: standalone) {
+      bottom: 3rem;
+    }
   }
   header p a {
     transform: rotate(180deg);
   }
   header:has(+ main [name="save"] article) [name="import"] {
-    transform: translateY(-10rem);
+    transform: translate(0, -10rem);
     opacity: 0;
     pointer-events: none;
+  }
+  [data-mode] [name="filter"] {
+    transform: translate(-10rem);
   }
   [name="filter"] {
     position: fixed;
@@ -1064,6 +1073,9 @@ fieldset:not(:disabled) .date {
     display: flex;
     gap: .25rem;
     z-index: 1;
+    @media (display-mode: standalone) {
+      bottom: 3rem;
+    }
   }
   [name="filter"] fieldset {
     display: contents;
@@ -1078,7 +1090,7 @@ fieldset:not(:disabled) .date {
     position: fixed;
     inset: 2rem var(--padding) auto;
     z-index: 1;
-    transform: translateY(-10rem);
+    transform: translate(0, -10rem);
   }
   [role="log"] {
     display: none;
@@ -1106,6 +1118,9 @@ fieldset:not(:disabled) .date {
   }
   .list {
     padding: 2rem var(--padding) 6rem;
+    @media (display-mode: standalone) {
+      padding: 2rem var(--padding) 6.5rem;
+    }
   }
   a .book-title {
     max-width: none;
@@ -1123,6 +1138,9 @@ fieldset:not(:disabled) .date {
   }
   [name="view"] footer {
     left: 5rem;
+    @media (display-mode: standalone) {
+      bottom: 3rem;
+    }
   }
 }
 
@@ -1226,9 +1244,7 @@ fieldset:not(:disabled) .date {
 
 @font-face {
   font-family: "Punctuation";
-  src:
-    local("MiSans"), local("HarmonyOS Sans"), local("Source Han Sans SC"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("思源黑体"),
-    url("https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FrYtHbQ.woff2") format("woff2");
+  src: local("PingFang SC"), local("MiSans"), local("HarmonyOS Sans"), local("Source Han Sans SC"), local("Noto Sans CJK SC"), local("Noto Sans SC"), local("思源黑体");
   unicode-range: U+2018-201D;
 }
 @font-face {

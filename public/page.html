@@ -6,11 +6,11 @@
     <title>建自用扫文站后我再也不文荒了</title>
     <meta name="author" content="fiammanda" />
     <meta name="description" content="自用扫文站" />
-    <meta name="color-scheme" content="light">
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://rsms.me/" crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://fontsapi.zeoseven.com/" crossorigin="anonymous" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style.css" />
     <script src="/script.js" defer></script>
     <script src="https://fastly.jsdelivr.net/npm/gsap/dist/gsap.min.js"></script>
@@ -38,51 +38,48 @@
           </a>
         </p>
         <form name="filter" autocomplete="off">
-          <fieldset>
-            <div class="select sort" tabindex="-1">
-              <input readonly type="text" name="sort" value="录入" />
-              <span class="label" data-value="录入" data-key="post" data-dir="dsc">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25">
-                  <path d="M3 5h18" />
-                  <path d="M15 12H3" />
-                  <path d="M9 19H3" />
-                </svg>
-              </span>
-              <ul role="listbox">
-                <li role="option" data-key="post" data-dir="dsc" aria-selected="true">录入</li>
-                <li role="option" data-key="post" data-dir="asc">录入</li>
-                <li role="option" data-key="update" data-dir="dsc">更新</li>
-                <li role="option" data-key="update" data-dir="asc">更新</li>
-                <li role="option" data-key="rating" data-dir="dsc">评分</li>
-                <li role="option" data-key="rating" data-dir="asc">评分</li>
-              </ul>
-            </div>
-          </fieldset>
+          <div class="select" tabindex="0">
+            <span role="combobox" aria-label="录入" data-key="post" data-dir="dsc" data-name="sort">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25">
+                <path d="M3 5h18" />
+                <path d="M15 12H3" />
+                <path d="M9 19H3" />
+              </svg>
+            </span>
+            <ul role="listbox">
+              <li role="option" data-key="post" data-dir="dsc" aria-selected="true">录入</li>
+              <li role="option" data-key="post" data-dir="asc" aria-selected="false">录入</li>
+              <li role="option" data-key="update" data-dir="dsc" aria-selected="false">更新</li>
+              <li role="option" data-key="update" data-dir="asc" aria-selected="false">更新</li>
+              <li role="option" data-key="rating" data-dir="dsc" aria-selected="false">评分</li>
+              <li role="option" data-key="rating" data-dir="asc" aria-selected="false">评分</li>
+            </ul>
+          </div>
           <fieldset>
             <label>
-              <input name="search" type="text" placeholder="　" />
-              <span class="label">
+              <input name="search" type="text" placeholder="书名 作者 简介" />
+              <span class="label" aria-label="书名 作者 简介">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25">
                   <path d="m21 21l-4.343-4.343m0 0A8 8 0 1 0 5.343 5.343a8 8 0 0 0 11.314 11.314" />
                 </svg>
               </span>
             </label>
-            <div class="select" tabindex="-1">
-              <input readonly type="text" name="status" placeholder="状态" />
+            <div class="select" tabindex="0">
+              <span role="combobox" aria-placeholder="状态" data-name="status"></span>
               <ul role="listbox">
-                <li role="option" data-placeholder="状态" aria-selected="true"></li>
-                <li role="option">停更</li>
-                <li role="option">连载</li>
-                <li role="option">完结</li>
+                <li role="option" aria-selected="true" aria-label="全部"></li>
+                <li role="option" aria-selected="false">停更</li>
+                <li role="option" aria-selected="false">连载</li>
+                <li role="option" aria-selected="false">完结</li>
               </ul>
             </div>
-            <div class="select" tabindex="-1">
-              <input readonly type="text" name="progress" placeholder="进度" />
+            <div class="select" tabindex="0">
+              <span role="combobox" aria-placeholder="进度" data-name="progress"></span>
               <ul role="listbox">
-                <li role="option" data-placeholder="进度" aria-selected="true"></li>
-                <li role="option">弃文</li>
-                <li role="option">追读</li>
-                <li role="option">看完</li>
+                <li role="option" aria-selected="true" aria-label="全部"></li>
+                <li role="option" aria-selected="false">弃文</li>
+                <li role="option" aria-selected="false">追读</li>
+                <li role="option" aria-selected="false">看完</li>
               </ul>
             </div>
             <button type="reset">
@@ -146,8 +143,8 @@
       <dialog id="dialog">
         <form name="auth" class="hidden" autocomplete="off">
           <label>
-            <input type="text" name="passcode" placeholder="　" />
-            <span class="label">
+            <input type="text" name="passcode" placeholder="口令" />
+            <span class="label" aria-label="口令">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M4.875 14.125Q4 13.25 4 12t.875-2.125T7 9t2.125.875T10 12t-.875 2.125T7 15t-2.125-.875M7 18q1.925 0 3.475-1.1T12.65 14H13l1.3 1.3q.15.15.325.212t.375.063t.375-.062t.325-.213L17 14l1.75 1.375q.15.125.338.187t.387.038t.363-.112t.287-.238l2.25-2.575q.125-.15.188-.325t.062-.375t-.075-.362t-.2-.288L21.325 10.3q-.15-.15-.337-.225T20.6 10h-7.95q-.6-1.7-2.113-2.85T7 6Q4.5 6 2.75 7.75T1 12t1.75 4.25T7 18" />
               </svg>

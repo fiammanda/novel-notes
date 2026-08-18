@@ -10,20 +10,24 @@ const normalize = {
     }[text];
   },
   genre(list) {
-    const set = new Set();
+    const arr = [];
     for (const g of list) {
-      let n = {
+      const n = {
         "动漫衍生": "衍生",
         "女频衍生": "衍生",
         "同人": "衍生",
         "玄幻脑洞": "玄幻",
         "二次元": "衍生",
+        "魂穿": "穿越",
+        "都市高武": ["都市", "高武"],
+        "都市异能": ["都市", "异能"],
         "搞笑轻松": "轻松",
-        "抗战谍战": "谍战",
+        "抗战谍战": ["抗战", "谍战"],
+        "克苏鲁": "克系",
       }[g];
-      set.add(n || g);
+      arr.push(n || g);
     }
-    return [...set];
+    return [...new Set(arr.flat())];
   }  
 }
 
