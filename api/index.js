@@ -9,7 +9,7 @@ app.use("/*", async (c, next) => {
   const ref = c.req.header("referer");
   const cookie = getCookie(c, "admin") === process.env.ADMIN_COOKIE;
   const secret = c.req.header("authorization") === `Bearer ${process.env.CRON_SECRET}`;
-  c.set("auth", cookie ? "cookie" : secret ? "secret" : null);
+  c.set("auth", cookie ? "cookie" : secret ? "secret" : false);
   c.set("same-site", URL.canParse(ref) && new URL(ref).origin === new URL(c.req.url).origin);
   await next();
 });

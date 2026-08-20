@@ -1,7 +1,6 @@
 const CACHE = {
   IMAGE: "image",
   ASSET: "asset",
-  DATA: "data",
 };
 
 self.addEventListener("fetch", e => {
@@ -10,8 +9,6 @@ self.addEventListener("fetch", e => {
   const samesite = url.origin === location.origin;
 
   const key = () => {
-    if (url.pathname === "/data.js" && samesite)
-      return "DATA";
     if (req.destination === "image" && samesite)
       return "IMAGE";
     if (req.destination === "font" || ["script", "style"].includes(req.destination) && !samesite)

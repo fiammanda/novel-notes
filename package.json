@@ -1,7 +1,7 @@
 {
   "name": "novel-notes",
   "version": "1.0.0",
-  "description": "",
+  "description": "扫文记录",
   "main": "api/index.js",
   "scripts": {
     "serve": "vercel dev --listen 0.0.0.0:2223"

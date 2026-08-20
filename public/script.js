@@ -2,21 +2,27 @@ navigator.serviceWorker && navigator.serviceWorker.register("/sw.js");
 
 gsap.registerPlugin(Flip);
 
+const DATA = window.DATA || [];
+const AUTH = "AUTH" in window ? window.AUTH : null;
+if(!AUTH) document.body.dataset.auth = AUTH;
+
 const ref = {
   pwa: window.matchMedia("(display-mode: standalone)").matches,
   rtf: new Intl.RelativeTimeFormat("zh", { numeric: "auto" }),
   urls: new Set(DATA.map((item) => item.url)),
   list: new Map(DATA.map((item) => [item.id, item])),
+  scroll: {},
   genres: [
-    "衍生",
-    "奇幻", "都市", "游戏",
-    "系统", "穿越",
+    "衍生", "历史",
+    "奇幻", "玄幻", "星际", "灵异", "游戏", "都市", "高武",
+    "系统", "穿越", "悬疑",
+    "克系", "谍战", "宠物", "无敌",
     "第四天灾", "灵气复苏",
     "言情", "双男主", "无女主", "单女主",
-    "轻松"
+    "第一人称", "轻松"
   ],
   status: [ "完结", "连载", "停更" ],
-  progress: [ "看完", "追读", "弃文" ]
+  progress: [ "看完", "追读", "观望", "弃文" ]
 };
 
 const doc = {
@@ -34,10 +40,6 @@ for (const child of document.body.firstElementChild.children) {
 }
 doc.list = doc.list.firstElementChild;
 doc.list.innerHTML = render(DATA, "list");
-
-if (!AUTH) {
-  document.body.dataset.auth = "false";
-}
 
 document.body.addEventListener("click", (e) => {
   if (document.body.ariaDisabled) {
@@ -82,11 +84,11 @@ document.body.addEventListener("click", (e) => {
         option.remove();
         Flip.from(state, { duration: .2 });
       } else {
-        const selected = option.ariaSelected === "true";
-        const state = Flip.getState(option);
-        const ul = select.children;
-        option.ariaSelected = !selected;
-        (selected ? ul[1] : ul[0]).append(option);
+        const boxes = select.children;
+        const index = option.ariaSelected === "true" ? 0 : 1;
+        const state = Flip.getState(boxes[index].children);
+        option.ariaSelected = !!index;
+        boxes[1 - index].append(option);
         Flip.from(state, { duration: .2, nested: true });
       }
     }
@@ -208,7 +210,7 @@ document.body.addEventListener("change", (e) => {
 });
 
 document.body.addEventListener("focusout", (e) => {
-  if (e.target.matches(".select li[contenteditable=true]") && !e.relatedTarget.matches(".select") && e.target.textContent.trim()) {
+  if (e.target.matches(".select li[contenteditable=true]") && !e.relatedTarget?.matches(".select") && e.target.textContent.trim()) {
     freeze(e.target);
     return;
   }
@@ -232,7 +234,6 @@ doc.auth.addEventListener("submit", async (e) => {
   if (success) {
     doc.link.href = "/import";
     doc.dialog.dispatchEvent(new Event("cancel"));
-    navigator.serviceWorker?.controller?.postMessage("purge:data");
   } else {
     pass.disabled = false;
     pass.readOnly = true;
@@ -274,12 +275,6 @@ doc.filter.addEventListener("reset", () => {
 doc.filter.addEventListener("submit", (e) => {
   e.preventDefault();
   filter();
-});
-
-doc.import.addEventListener("reset", () => {
-  if (confirm("清理缓存咯？")) {
-    navigator.serviceWorker?.controller?.postMessage("purge:data");
-  }
 });
 
 doc.import.addEventListener("submit", async (e) => {
@@ -355,7 +350,6 @@ doc.save.addEventListener("submit", async (e) => {
   });
   const json = await resp.json();
   if (!json.error.length) {
-    navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA.push(...data);
     data.forEach((item) => {
       ref.list.set(item.id, item);
@@ -372,7 +366,7 @@ doc.save.addEventListener("submit", async (e) => {
       doc.import.urls.removeAttribute("class");
     }, 200);
   }
-  doc.save.submit.disabled = false;
+  setTimeout(() => doc.save.submit.disabled = false, 200);
   log(json);
 });
 
@@ -396,22 +390,21 @@ doc.view.addEventListener("submit", async (e) => {
   });
   const json = await resp.json();
   if (!json.error.length) {
-    navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA[DATA.findIndex(({ id }) => id === item.id)] = item;
     ref.list.set(item.id, item);
     doc.view.set.disabled = true;
     doc.view.querySelectorAll(".select, [contenteditable]").forEach((el) => {
       el.dataset.tab ? el.removeAttribute("tabindex") : el.setAttribute("contenteditable", "false");
     });
-    const item = doc.view.querySelector(".select li:has(button)");
-    if (item) {
-      const list = [...item.parentElement.children];
-      const state = Flip.getState(list.slice(list.indexOf(item)));
-      item.parentElement.querySelectorAll("button").forEach((button) => button.remove());
+    const li = doc.view.querySelector(".select li:has(button)");
+    if (li) {
+      const list = [...li.parentElement.children];
+      const state = Flip.getState(list.slice(list.indexOf(li)));
+      li.parentElement.querySelectorAll("button").forEach((button) => button.remove());
       Flip.from(state, { duration: .2 });
     }
   }
-  doc.view.submit.disabled = false;
+  setTimeout(() => doc.view.submit.disabled = false, 200);
 });
 
 doc.dialog.addEventListener("toggle", (e) => {
@@ -430,7 +423,7 @@ doc.dialog.addEventListener("click", (e) => {
 });
 
 window.addEventListener("popstate", () => {
-  navigate(!ref.pwa);
+  navigate(true);
 });
 
 navigate();
@@ -487,7 +480,7 @@ function filter(type) {
 
 function render(data, type) {
   if (type === "list") {
-    return data.map(({ id, url, title, cover, upload, author, status, words, genre, summary, update, latest, rating, review, progress, post, edit }) => {
+    return data.map(({ id, title, author, update, rating, progress }) => {
       let star = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">`;
       star += progress === "弃文"
         ? `<path d="m8.85 16.825l3.15-1.9l3.15 1.925l-.825-3.6l2.775-2.4l-3.65-.325l-1.45-3.4l-1.45 3.375l-3.65.325l2.775 2.425zm3.15.45l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525.2t-.575-.15zm0-5.025" />`
@@ -630,18 +623,18 @@ function relative(date) {
   return date.toLocaleDateString("sv");
 }
 
-function navigate(transition = true, path = location.pathname) {
+function navigate(popstate = false, path = location.pathname) {
   const line = doc.link.firstElementChild.children;
   const item = ref.list.get(path.slice(1));
-  if (!transition) {
+  if (popstate && ref.pwa) {
     document.body.className = "instant";
     setTimeout(() => document.body.removeAttribute("class"), 10);
   }
   if (item) {
     document.body.dataset.mode = "view";
-    doc.view.scrollTop = 0;
-    doc.view.set.innerHTML = render([item], "view");
     doc.link.href = "/";
+    doc.view.set.innerHTML = render([item], "view");
+    doc.view.scrollTop = popstate ? ref.scroll[item.id] ?? 0 : 0;
     gsap.to(line, {
       duration: .2,
       attr: { d: (i) => ["M17 5 L17 19", "M4 12 L13 12", "M4 12 L8 8", "M4 12 L8 16"][i] }
@@ -657,12 +650,13 @@ function navigate(transition = true, path = location.pathname) {
     delete document.body.dataset.mode;
     if (path !== "/") history.replaceState(null, "", "/");
     if (AUTH) {
-      doc.view.set.disabled = true;
       doc.link.href = "/import";
+      doc.view.set.disabled = true;
       gsap.to(line, {
         duration: .2,
         attr: { d: (i) => ["M12 5 L12 19", "M5 12 L19 12", "M5 12 L19 12", "M5 12 L19 12"][i] }
       });
     }
+    doc.view.elements.id && (ref.scroll[doc.view.elements.id.value] = doc.view.scrollTop);
   }
 }

@@ -32,10 +32,8 @@
   --color-neutral-04a: hsl(260 60 30 / .04);
   --color-neutral-09a: hsl(260 20 95 / .50);
   --color-neutral-10a: hsl(260 20 98 / .80);
-  --color-amber-a: hsl(40 100 70 / .8);
-  --color-amber-0: hsl(40 90 96);
-  --color-amber-1: hsl(48 92 70);
-  --color-amber-2: hsl(46 94 68);
+  --color-amber-1: hsl(48 92 68);
+  --color-amber-2: hsl(46 94 66);
   --color-amber-3: hsl(44 96 64);
   --color-amber-4: hsl(42 98 62);
   --color-amber-5: hsl(40 100 60);
@@ -64,7 +62,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: max(16px, 1vw);
   text-size-adjust: none;
   text-rendering: optimizeLegibility;
   cursor: crosshair;
@@ -75,6 +73,9 @@ html {
   -webkit-tap-highlight-color: transparent;
   &:has(dialog[open], [data-mode]) {
     overflow: clip;
+  }
+  @supports (-webkit-touch-callout: none) {
+    font-size: 17px;
   }
 }
 body {
@@ -237,6 +238,7 @@ input, textarea {
 textarea {
   display: block;
   width: 100%;
+  font-size: .9375rem;
   line-height: 1.75;
   resize: none;
   &:focus {
@@ -533,7 +535,7 @@ textarea {
   padding: 2rem 0 0 var(--padding);
   container-type: inline-size;
   h1 {
-  margin: -.2em 0 0 -.05em;
+  margin: -.05em 0 0 -.02em;
   font-size: min(4rem, 14cqw);
   font-weight: 300;
   line-height: 1.25;
@@ -548,7 +550,7 @@ textarea {
   p {
     display: none;
     margin: 1rem 0 0;
-    font-family: "Yozai", var(--font-sans);
+    font-family: "CooperZhengKai", var(--font-sans);
     color: var(--color-neutral-060);
   }
 }
@@ -562,7 +564,7 @@ textarea {
   --button-bg: transparent;
   &::before {
     content: "骗你的";
-    font-family: "Yozai", var(--font-sans);
+    font-family: "CooperZhengKai", var(--font-sans);
     color: var(--color-neutral-060);
   }
   a, button {
@@ -601,7 +603,7 @@ textarea {
   button {
     opacity: 0;
     pointer-events: none;
-    [data-auth]:not([data-mode]) & {
+    [data-auth="false"]:not([data-mode]) & {
       opacity: 1;
       pointer-events: auto;
     }
@@ -617,6 +619,9 @@ textarea {
 #filter {
   --button-cl: var(--color-neutral-070);
   --button-bg: var(--color-neutral-04a);
+  [data-auth="null"] & {
+    pointer-events: none;
+  }
   [data-mode] & {
     opacity: 0;
     transform: translate(10rem);
@@ -715,6 +720,9 @@ textarea {
     inset: auto 1rem 3rem auto;
     --button-cl: var(--color-white);
     --button-bg: var(--color-neutral-060);
+    button[type="reset"] {
+      display: none;
+    }
     button[type="submit"] {
       path:last-child {
         transition: opacity var(--transition);
@@ -773,6 +781,12 @@ textarea {
       opacity: 0;
       pointer-events: none;
       transition: opacity var(--transition);
+    }
+    &:empty::after {
+      content: "数据没抓到哦 (._.)";
+      inset: 0;
+      display: grid;
+      place-items: center;
     }
     &:not(:has(> li:not(.hidden)))::after {
       opacity: 1;
@@ -922,8 +936,8 @@ textarea {
   nav {
     flex: 0 0 min(4rem, 5vw);
     position: sticky;
-    top: 2rem;
-    max-height: calc(100dvh - 4rem);
+    top: 2.35rem;
+    max-height: calc(100dvh - 4.35rem);
     overflow: clip auto;
     figure {
       margin: 1rem 0 0;
@@ -957,8 +971,9 @@ textarea {
     flex: 0 0 max(7rem, 10vw);
   }
   [name="review"] {
-    margin: 2rem 0 0;
-    --input-bg: var(--color-neutral-10a);
+    margin: 2.75rem .5rem 0;
+    min-height: 8.5rem;
+    border: 1px solid var(--color-neutral-03a);
   }
 }
 
@@ -977,10 +992,12 @@ textarea {
   footer path[pathLength] {
     stroke-dasharray: 1;
     stroke-dashoffset: 0;
-    transition: stroke-dashoffset var(--transition);
+    transition: var(--transition);
+    transition-property: opacity, stroke-dashoffset;
   }
   fieldset:disabled + footer path[pathLength] {
     stroke-dashoffset: 1;
+    opacity: 0;
   }
 }
 
@@ -988,7 +1005,7 @@ article {
   display: flex;
   align-items: flex-start;
   gap: calc(var(--padding) / 2 + 1rem);
-  padding: 2rem 0 0;
+  padding: 2.35rem 0;
   min-width: 0;
   --input-cl: currentColor;
   --input-bg: transparent;
@@ -1006,7 +1023,7 @@ article {
   .book-cover {
     flex: 0 0 max(10rem, 14vw);
     position: sticky;
-    top: 2rem;
+    top: 2.35rem;
     text-align: center;
     transition: opacity var(--transition);
   }
@@ -1030,7 +1047,7 @@ article {
     &::after {
       content: "";
       display: block;
-      margin: 2rem 25% 1.5rem;
+      margin: 2rem 25% 1.75rem;
       height: .125rem;
       background: var(--color-neutral-090);
     }
@@ -1088,7 +1105,7 @@ article {
     color: var(--color-amber-6);
   }
   [data-name="title"] {
-    margin: -.7rem 0 0;
+    margin: -.4em 0 0;
     font-size: 1.5rem;
     line-height: 1.25;
     padding: .375rem .5rem;
@@ -1107,7 +1124,7 @@ article {
     white-space: nowrap;
   }
   [name="review"] {
-    font-family: "Yozai", var(--font-sans);
+    font: 1rem / 1.5 "CooperZhengKai", var(--font-sans);
   }
 }
 
@@ -1128,7 +1145,6 @@ article {
       pointer-events: none;
     }
     h1 {
-      margin: -.125rem 0 0 0;
       font-size: 2rem;
     }
     p {
@@ -1210,10 +1226,14 @@ article {
     position: static;
     padding: 2rem var(--padding) 6rem;
     @media (display-mode: standalone) {
-      padding: 2rem var(--padding) 6.5rem;
+      padding: 2rem var(--padding) 7rem;
     }
     [data-mode] & {
       transform: translate(-10rem);
+    }
+    [data-auth="null"] & ul::after {
+      position: static;
+      display: block;
     }
   }
   #save, #view {
@@ -1280,19 +1300,30 @@ article {
   }
   #save, #view {
     padding-inline: calc(var(--padding) - .5rem);
-    footer {
-      padding: 0 .5rem 0 0;
+    fieldset {
+      padding: 0 0 2rem;
+      @media (display-mode: standalone) {
+        padding: 0 0 3rem;
+      }
     }
   }
   #save {
-    fieldset {
-      padding: 0;
-    }
     article {
-      padding-block-end: 1rem;
+      padding: 2rem 0;
     }
     nav {
       display: none;
+    }
+    footer {
+      padding: 0 .5rem 2rem 0;
+      @media (display-mode: standalone) {
+        padding: 0 .5rem 3rem 0;
+      }
+    }
+  }
+  #view {
+    footer {
+      padding: 0 .5rem 0 0;
     }
   }
   article {
@@ -1329,6 +1360,43 @@ article {
     .book-rating svg:not(:first-child) {
       display: none;
     }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-neutral-010: hsl(270 20 99);
+    --color-neutral-020: hsl(265 20 95);
+    --color-neutral-030: hsl(260 20 90);
+    --color-neutral-040: hsl(255 20 80);
+    --color-neutral-050: hsl(250 20 70);
+    --color-neutral-060: hsl(245 19 60);
+    --color-neutral-070: hsl(240 15 50);
+    --color-neutral-080: hsl(235 17 42);
+    --color-neutral-090: hsl(230 20 35);
+    --color-neutral-095: hsl(225 20 28);
+    --color-neutral-100: hsl(220 20 21);
+    --color-neutral-00a: hsl(260 20 70 / .50);
+    --color-neutral-01a: hsl(260 40 90 / .20);
+    --color-neutral-02a: hsl(260 40 90 / .15);
+    --color-neutral-03a: hsl(260 40 90 / .10);
+    --color-neutral-04a: hsl(260 40 90 / .05);
+    --color-neutral-09a: hsl(260 40 90 / .10);
+    --color-neutral-10a: hsl(260 25 20 / .80);
+    --color-amber-1: hsl(48 60 60);
+    --color-amber-2: hsl(46 70 62);
+    --color-amber-3: hsl(44 80 64);
+    --color-amber-4: hsl(42 90 66);
+    --color-amber-5: hsl(40 100 68);
+    --color-amber-6: hsl(40 100 70);
+    --color-amber-7: hsl(50 10 40);
+    --color-amber-8: hsl(240 10 25);
+    --color-amber-9: hsl(240 10 30 / .75);
+    --color-white: hsl(240 10 10);
+  }
+  article img {
+    box-shadow: .5rem .5rem 1rem #000c;
   }
 }
 
