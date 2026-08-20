@@ -1,11 +1,11 @@
 navigator.serviceWorker && navigator.serviceWorker.register("/sw.js");
+
 gsap.registerPlugin(Flip);
 
 const ref = {
-  nav: false,
   pwa: window.matchMedia("(display-mode: standalone)").matches,
   rtf: new Intl.RelativeTimeFormat("zh", { numeric: "auto" }),
-  urls: Object.fromEntries(DATA.map(({ url, title }) => [url, title])),
+  urls: new Set(DATA.map((item) => item.url)),
   list: new Map(DATA.map((item) => [item.id, item])),
   genres: [
     "衍生",
@@ -20,20 +20,24 @@ const ref = {
 };
 
 const doc = {
-  form: document.forms,
-  list: document.querySelector(".list"),
-  main: document.querySelector("main"),
-  link: document.querySelector("header a"),
-  button: document.querySelector("header button"),
-  dialog: document.querySelector("dialog"),
-  log: document.querySelector("[role=log]")
+  auth: document.forms.auth,
+  log: document.querySelector("[role=log]"),
+  link: document.querySelector("#widget a"),
+  button: document.querySelector("#widget button"),
 };
-doc.form.filter.querySelectorAll("[data-name]").forEach((el) => doc.form.filter[el.dataset.name] = el);
-doc.form.filter.option = doc.form.filter.querySelectorAll("fieldset [role=option]");
-
-if (AUTH) auth();
-
+for (const child of document.body.firstElementChild.children) {
+  doc[child.id] = child;
+  if (child.tagName === "FORM") {
+    child.querySelectorAll("[data-name]").forEach((el) => doc[child.id][el.dataset.name] = el);
+    if (child.id === "filter") doc.filter.option = doc.filter.querySelectorAll("fieldset [role=option]");
+  }
+}
+doc.list = doc.list.firstElementChild;
 doc.list.innerHTML = render(DATA, "list");
+
+if (!AUTH) {
+  document.body.dataset.auth = "false";
+}
 
 document.body.addEventListener("click", (e) => {
   if (document.body.ariaDisabled) {
@@ -46,13 +50,12 @@ document.body.addEventListener("click", (e) => {
     e.preventDefault();
     history.pushState(null, "",  e.target.closest("a").href);
     navigate();
-    ref.nav = true;
     return;
   }
 
   if (e.target.closest("[data-nav]")) {
     const nav = e.target.closest("[data-nav]");
-    doc.form.save.set.children[nav.dataset.nav].scrollIntoView({ behavior: "smooth" });
+    doc.save.set.firstElementChild.children[nav.dataset.nav].scrollIntoView({ behavior: "smooth" });
     return;
   }
 
@@ -96,6 +99,15 @@ document.body.addEventListener("click", (e) => {
   }
 });
 
+document.body.addEventListener("dblclick", (e) => {
+  if (!e.target.matches(".date:has([contenteditable=true])")) return;
+  const array = e.target.closest(".date").children;
+  const date = new Date();
+  array[0].textContent = date.getFullYear();
+  array[1].textContent = `${date.getMonth() + 1}`.padStart(2, "0");
+  array[2].textContent = `${date.getDate()}`.padStart(2, "0");
+});
+
 document.body.addEventListener("mousedown", (e) => {
   const select = e.target.closest(".select");
   if (!select && document.activeElement.className === "select" && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
@@ -115,14 +127,8 @@ document.body.addEventListener("keydown", (e) => {
     doc.dialog.requestClose();
   }
 
-  if (location.pathname !== "/" && e.key === "Escape") {
-    history.pushState(null, "",  "/");
-    navigate();
-    return;
-  }
-
   if (e.target.matches("[name=filter] input") && e.key === "Escape") {
-    doc.form.filter.reset();
+    doc.filter.reset();
     e.target.blur()
   }
 
@@ -138,7 +144,7 @@ document.body.addEventListener("keydown", (e) => {
     return;
   }
 
-  if (e.target.matches(".select li[contenteditable]") && e.key === "Enter") {
+  if (e.target.matches(".select li[contenteditable=true]") && e.key === "Enter") {
     e.preventDefault();
     freeze(e.target);
     e.target.focus();
@@ -171,22 +177,7 @@ document.body.addEventListener("keydown", (e) => {
   }
 });
 
-doc.dialog.addEventListener("toggle", (e) => {
-  if (!doc.dialog.open) return;
-  setTimeout(() => doc.form.auth.removeAttribute("class"), 0);
-});
-
-doc.dialog.addEventListener("cancel", (e) => {
-  e.preventDefault();
-  doc.form.auth.className = "hidden";
-  setTimeout(() => doc.dialog.close(), 200);
-});
-
-doc.dialog.addEventListener("click", (e) => {
-  if (e.target === doc.form.auth) doc.dialog.dispatchEvent(new Event("cancel"));
-});
-
-doc.main.addEventListener("beforeinput", (e) => {
+document.body.addEventListener("beforeinput", (e) => {
   if (!e.target.closest(".date span")) return;
   e.preventDefault();
   if (!/^\d+$/.test(e.data)) return;
@@ -207,28 +198,7 @@ doc.main.addEventListener("beforeinput", (e) => {
   }
 });
 
-doc.main.addEventListener("focusout", (e) => {
-  if (e.target.matches(".select li[contenteditable]") && e.target.textContent.trim()) {
-    freeze(e.target);
-    return;
-  }
-
-  if (e.target.matches(".date span")) {
-    e.target.dataset.value = e.target.textContent;
-    return;
-  }
-});
-
-doc.main.addEventListener("dblclick", (e) => {
-  if (!e.target.closest(".date")) return;
-  const array = e.target.closest(".date").children;
-  const date = new Date();
-  array[0].textContent = date.getFullYear();
-  array[1].textContent = `${date.getMonth() + 1}`.padStart(2, "0");
-  array[2].textContent = `${date.getDate()}`.padStart(2, "0");
-});
-
-doc.main.addEventListener("change", (e) => {
+document.body.addEventListener("change", (e) => {
   if (e.target.type !== "date") return;
   const array = e.target.closest(".date").children;
   const value = e.target.value.split("-");
@@ -237,9 +207,21 @@ doc.main.addEventListener("change", (e) => {
   array[2].textContent = value[2];
 });
 
-doc.form.auth.addEventListener("submit", async (e) => {
+document.body.addEventListener("focusout", (e) => {
+  if (e.target.matches(".select li[contenteditable=true]") && !e.relatedTarget.matches(".select") && e.target.textContent.trim()) {
+    freeze(e.target);
+    return;
+  }
+
+  if (e.target.matches(".date span[contenteditable=true]")) {
+    e.target.dataset.value = e.target.textContent;
+    return;
+  }
+});
+
+doc.auth.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const pass = doc.form.auth.passcode;
+  const pass = doc.auth.passcode;
   pass.disabled = true;
   const resp = await fetch("/api/auth", {
     method: "POST",
@@ -248,7 +230,8 @@ doc.form.auth.addEventListener("submit", async (e) => {
   })
   const { success } = await resp.json();
   if (success) {
-    auth();
+    doc.link.href = "/import";
+    doc.dialog.dispatchEvent(new Event("cancel"));
     navigator.serviceWorker?.controller?.postMessage("purge:data");
   } else {
     pass.disabled = false;
@@ -260,20 +243,20 @@ doc.form.auth.addEventListener("submit", async (e) => {
   }
 });
 
-doc.form.filter.search.addEventListener("compositionstart", () => {
-  doc.form.filter.composing = true;
+doc.filter.search.addEventListener("compositionstart", () => {
+  doc.filter.composing = true;
 });
 
-doc.form.filter.search.addEventListener("compositionend", () => {
-  doc.form.filter.composing = false;
-  doc.form.filter.dispatchEvent(new Event("input"));
+doc.filter.search.addEventListener("compositionend", () => {
+  doc.filter.composing = false;
+  doc.filter.dispatchEvent(new Event("input"));
 });
 
-doc.form.filter.addEventListener("input", (e) => {
+doc.filter.addEventListener("input", (e) => {
   if (e.target.name === "search") {
-    if (doc.form.filter.composing) return;
-    clearTimeout(doc.form.filter.debounce);
-    doc.form.filter.debounce = setTimeout(() => filter(), 100);
+    if (doc.filter.composing) return;
+    clearTimeout(doc.filter.debounce);
+    doc.filter.debounce = setTimeout(() => filter(), 100);
   } else if (e.target.dataset.name === "sort") {
     filter("sort");
   } else {
@@ -281,30 +264,36 @@ doc.form.filter.addEventListener("input", (e) => {
   }
 });
 
-doc.form.filter.addEventListener("reset", () => {
-  doc.form.filter.option.forEach((el) => (el.ariaSelected = el.ariaLabel ? true : false));
-  doc.form.filter.status.textContent = "";
-  doc.form.filter.progress.textContent = "";
+doc.filter.addEventListener("reset", () => {
+  doc.filter.option.forEach((el) => (el.ariaSelected = el.ariaLabel ? true : false));
+  doc.filter.status.textContent = "";
+  doc.filter.progress.textContent = "";
   filter("reset");
 });
 
-doc.form.filter.addEventListener("submit", (e) => {
+doc.filter.addEventListener("submit", (e) => {
   e.preventDefault();
   filter();
 });
 
-doc.form.import.addEventListener("submit", async (e) => {
+doc.import.addEventListener("reset", () => {
+  if (confirm("清理缓存咯？")) {
+    navigator.serviceWorker?.controller?.postMessage("purge:data");
+  }
+});
+
+doc.import.addEventListener("submit", async (e) => {
   e.preventDefault();
   const urls = [];
   const logs = { error: [] };
 
-  doc.form.import.urls.value.split("\n").forEach((url) => {
+  doc.import.urls.value.split("\n").forEach((url) => {
     if (!url.trim() || !url.includes("http")) return;
     try {
       const u = new URL(url);
       u.hash = "";
       u.search = "";
-      ref.urls[u.href]
+      ref.urls.has(u.href)
         ? logs.error.push({ url: u.href, msg: "URL already exists" })
         : urls.push(u.href);
       return u.href;
@@ -319,9 +308,9 @@ doc.form.import.addEventListener("submit", async (e) => {
     return;
   }
 
-  doc.form.save.className = "hidden";
-  doc.form.import.button.disabled = true;
-  const spin = gsap.to(doc.form.import.button.querySelector("path"), {
+  e.submitter.disabled = true;
+  doc.save.className = "hidden";
+  const spin = gsap.to(e.submitter.querySelector("path"), {
     transformOrigin: "50%",
     rotation: "+=360",
     ease: "none",
@@ -338,32 +327,25 @@ doc.form.import.addEventListener("submit", async (e) => {
     new Promise(res => setTimeout(res, 200))
   ]);
   spin.repeat(0);
-  spin.kill();
   json.error = (json.error || []).concat(logs.error || []);
   log(json);
-  doc.form.import.button.removeAttribute("disabled");
-  doc.form.save.firstElementChild.innerHTML = render(json.data, "save");
-  setTimeout(() => {
-    doc.form.save.removeAttribute("class");
-    doc.form.save.querySelectorAll("[name=summary]").forEach((el) => {
-      el.style.height = "0";
-      el.style.height = `${el.scrollHeight}px`;
-    });
-  }, 0);
+  e.submitter.removeAttribute("disabled");
+  doc.save.firstElementChild.innerHTML = render(json.data, "save");
+  setTimeout(() => doc.save.removeAttribute("class"), 0);
 });
 
-doc.form.save.addEventListener("reset", (e) => {
-  doc.form.save.className = "hidden";
+doc.save.addEventListener("reset", (e) => {
+  doc.save.className = "hidden";
   setTimeout(() => {
-    doc.form.save.firstElementChild.replaceChildren();
-    doc.form.save.removeAttribute("class");
+    doc.save.firstElementChild.replaceChildren();
+    doc.save.removeAttribute("class");
   }, 200);
 });
 
-doc.form.save.addEventListener("submit", async (e) => {
+doc.save.addEventListener("submit", async (e) => {
   e.preventDefault();
-  doc.form.save.submit.disabled = true;
-  const data = [...doc.form.save.set.querySelectorAll("article")].map((article) => collect(article));
+  doc.save.submit.disabled = true;
+  const data = [...doc.save.set.querySelectorAll("article")].map((article) => collect(article));
   const resp = await fetch("/api/data", {
     method: "POST",
     headers: {
@@ -375,33 +357,36 @@ doc.form.save.addEventListener("submit", async (e) => {
   if (!json.error.length) {
     navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA.push(...data);
-    data.forEach(item => ref.list.set(item.id, item));
-    doc.form.save.className = "hidden";
-    doc.form.import.urls.className = "hidden";
+    data.forEach((item) => {
+      ref.list.set(item.id, item);
+      ref.urls.add(item.url);
+    });
+    doc.save.className = "hidden";
+    doc.import.urls.className = "hidden";
     doc.list.insertAdjacentHTML("beforeend", render(data, "list"));
     filter("sort");
     setTimeout(() => {
-      doc.form.save.firstElementChild.replaceChildren();
-      doc.form.save.removeAttribute("class");
-      doc.form.import.urls.value = "";
-      doc.form.import.urls.removeAttribute("class");
+      doc.save.firstElementChild.replaceChildren();
+      doc.save.removeAttribute("class");
+      doc.import.urls.value = "";
+      doc.import.urls.removeAttribute("class");
     }, 200);
   }
-  doc.form.save.submit.disabled = false;
+  doc.save.submit.disabled = false;
   log(json);
 });
 
-doc.form.view.addEventListener("reset", (e) => {
-  const disabled = !doc.form.view.set.disabled;
-  doc.form.view.set.disabled = disabled;
-  doc.form.view.querySelectorAll("[contenteditable]").forEach((el) => el.contentEditable = !disabled);
-  doc.form.view.querySelectorAll(".select").forEach((el) => disabled ? el.removeAttribute("tabindex") : (el.tabIndex = el.dataset.tab));
+doc.view.addEventListener("reset", (e) => {
+  const disabled = !doc.view.set.disabled;
+  doc.view.set.disabled = disabled;
+  doc.view.querySelectorAll("[contenteditable]").forEach((el) => el.contentEditable = !disabled);
+  doc.view.querySelectorAll("[data-tab]").forEach((el) => disabled ? el.removeAttribute("tabindex") : (el.tabIndex = el.dataset.tab));
 });
 
-doc.form.view.addEventListener("submit", async (e) => {
+doc.view.addEventListener("submit", async (e) => {
   e.preventDefault();
-  doc.form.view.submit.disabled = true;
-  const item = collect(doc.form.view.set);
+  doc.view.submit.disabled = true;
+  const item = collect(doc.view.set);
   const resp = await fetch("/api/data", {
     method: "POST",
     headers: {
@@ -414,11 +399,11 @@ doc.form.view.addEventListener("submit", async (e) => {
     navigator.serviceWorker?.controller?.postMessage("purge:data");
     DATA[DATA.findIndex(({ id }) => id === item.id)] = item;
     ref.list.set(item.id, item);
-    doc.form.view.set.disabled = true;
-    doc.form.view.querySelectorAll(".select, [contenteditable]").forEach((el) => {
+    doc.view.set.disabled = true;
+    doc.view.querySelectorAll(".select, [contenteditable]").forEach((el) => {
       el.dataset.tab ? el.removeAttribute("tabindex") : el.setAttribute("contenteditable", "false");
     });
-    const item = doc.form.view.querySelector(".select li:has(button)");
+    const item = doc.view.querySelector(".select li:has(button)");
     if (item) {
       const list = [...item.parentElement.children];
       const state = Flip.getState(list.slice(list.indexOf(item)));
@@ -426,12 +411,26 @@ doc.form.view.addEventListener("submit", async (e) => {
       Flip.from(state, { duration: .2 });
     }
   }
-  doc.form.view.submit.disabled = false;
+  doc.view.submit.disabled = false;
+});
+
+doc.dialog.addEventListener("toggle", (e) => {
+  if (!doc.dialog.open) return;
+  setTimeout(() => doc.auth.removeAttribute("class"), 0);
+});
+
+doc.dialog.addEventListener("cancel", (e) => {
+  e.preventDefault();
+  doc.auth.className = "hidden";
+  setTimeout(() => doc.dialog.close(), 200);
+});
+
+doc.dialog.addEventListener("click", (e) => {
+  if (e.target === doc.auth) doc.dialog.dispatchEvent(new Event("cancel"));
 });
 
 window.addEventListener("popstate", () => {
-  navigate(!ref.pwa || ref.nav);
-  ref.nav = false;
+  navigate(!ref.pwa);
 });
 
 navigate();
@@ -450,23 +449,11 @@ function log(logs) {
   }, 200);
 }
 
-function auth() {
-  const line = doc.link.firstElementChild.children;
-  line[0].setAttribute("x1", 12);
-  line[0].setAttribute("x2", 12);
-  line[1].setAttribute("x1", 5.5);
-  line[1].setAttribute("x2", 18.5);
-  line[2].setAttribute("y2", 12);
-  line[3].setAttribute("y2", 12);
-  doc.link.href = "/import";
-  doc.dialog.dispatchEvent(new Event("cancel"));
-}
-
 function filter(type) {
   const list = [...doc.list.children];
   if (type === "sort") {
     const state = Flip.getState(list);
-    const { key, dir } = doc.form.filter.sort.dataset;
+    const { key, dir } = doc.filter.sort.dataset;
     list.sort((a, b) => {
       const va = ref.list.get(a.dataset.id)[key];
       const vb = ref.list.get(b.dataset.id)[key];
@@ -478,23 +465,22 @@ function filter(type) {
     list.forEach((li) => doc.list.append(li));
     Flip.from(state, { duration: .2 });
   } else {
-    [...doc.list.children].forEach((li) => {
-      if (type === "reset") {
-        requestAnimationFrame(() => { li.removeAttribute("class") });
-        return;
-      }
-      const conditions = [
-        ["progress", doc.form.filter.progress.textContent],
-        ["status",   doc.form.filter.status.textContent],
-        ["search",   doc.form.filter.search.value]
-      ];
+    if (type === "reset") {
+      requestAnimationFrame(() =>list.forEach((li) => li.removeAttribute("class")));
+      return;
+    }
+    const condition = {
+      progress: doc.filter.progress.textContent,
+      status:   doc.filter.status.textContent,
+      search:   doc.filter.search.value
+    };
+    list.forEach((li) => {
       const item = ref.list.get(li.dataset.id);
-      const hide = !conditions.every(([key, val]) => {
-        if (!val) return true;
-        if (key === "search") return [item.title, item.author, item.summary].some((v) => v?.includes(val));
-        return item[key] == val;
-      });
-      li.classList.toggle("hidden", hide)
+      const show =
+        (!condition.progress || item.progress === condition.progress) &&
+        (!condition.status || item.status === condition.status) &&
+        (!condition.search || item.title.includes(condition.search) || item.author.includes(condition.search) || item.summary.includes(condition.search));
+      li.classList.toggle("hidden", !show);
     });
   }
 }
@@ -600,7 +586,7 @@ function render(data, type) {
       </figure>`;
     });
     return editable
-      ? `${html[0]}<nav>${html[1]}</nav>`
+      ? `<section>${html[0]}</section><nav>${html[1]}</nav>`
       : html[0];
   }
 }
@@ -653,35 +639,30 @@ function navigate(transition = true, path = location.pathname) {
   }
   if (item) {
     document.body.dataset.mode = "view";
-    doc.form.view.scrollTop = 0;
+    doc.view.scrollTop = 0;
+    doc.view.set.innerHTML = render([item], "view");
     doc.link.href = "/";
-    const line = doc.link.firstElementChild.children;
-    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
-    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
-    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
-    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
-    doc.form.view.firstElementChild.innerHTML = render([item], "view");
-    doc.form.view.querySelectorAll("textarea").forEach((el) => {
-      el.style.height = "0";
-      el.style.height = `${el.scrollHeight}px`;
+    gsap.to(line, {
+      duration: .2,
+      attr: { d: (i) => ["M17 5 L17 19", "M4 12 L13 12", "M4 12 L8 8", "M4 12 L8 16"][i] }
     });
   } else if (path === "/import") {
     document.body.dataset.mode = "save";
     doc.link.href = "/";
-    gsap.to(line[0], { duration: .2, attr: { x1: 6.5, x2: 6.5 }});
-    gsap.to(line[1], { duration: .2, attr: { x1: 10.5, x2: 21 }});
-    gsap.to(line[2], { duration: .2, attr: { y2: 8 }});
-    gsap.to(line[3], { duration: .2, attr: { y2: 16 }});
+    gsap.to(line, {
+      duration: .2,
+      attr: { d: (i) => ["M17 5 L17 19", "M4 12 L13 12", "M4 12 L8 8", "M4 12 L8 16"][i] }
+    });
   } else {
     delete document.body.dataset.mode;
     if (path !== "/") history.replaceState(null, "", "/");
     if (AUTH) {
-      doc.form.view.set.disabled = true;
+      doc.view.set.disabled = true;
       doc.link.href = "/import";
-      gsap.to(line[0], { duration: .2, attr: { x1: 12, x2: 12 }});
-      gsap.to(line[1], { duration: .2, attr: { x1: 5.5, x2: 18.5 }});
-      gsap.to(line[2], { duration: .2, attr: { y2: 12 }});
-      gsap.to(line[3], { duration: .2, attr: { y2: 12 }});
+      gsap.to(line, {
+        duration: .2,
+        attr: { d: (i) => ["M12 5 L12 19", "M5 12 L19 12", "M5 12 L19 12", "M5 12 L19 12"][i] }
+      });
     }
   }
 }
