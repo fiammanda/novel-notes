@@ -498,6 +498,29 @@ textarea {
   transition-property: opacity, transform;
 }
 
+#notice {
+  position: fixed;
+  top: 3rem;
+  left: 50%;
+  padding: 1rem;
+  font-size: .875rem;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--color-amber-9);
+  border-radius: var(--radius);
+  box-shadow: 0 0 1rem #0013;
+  backdrop-filter: blur(.25rem);
+  transform: translate(-50%);
+  transition: var(--transition);
+  transition-property: opacity, transform;
+  transition-delay: 0s, 0s;
+  z-index: 3;
+  &.hidden {
+    transform: translate(-50%, -2rem);
+    transition-delay: 0s, 2s;
+  }
+}
+
 #dialog {
   --input-bg-focus: var(--color-white);
   &::backdrop {
@@ -732,27 +755,6 @@ textarea {
       }
     }
   }
-  ul {
-    margin: 0 0 1rem;
-    font: .75rem / 1.5 var(--font-mono);
-    color: var(--color-neutral-050);
-    transition: opacity var(--transition);
-    .log-entry {
-      display: flex;
-      gap: .75rem;
-      white-space: nowrap;
-    }
-    .log-entry span:first-child {
-      flex: 1;
-    }
-    .log-entry span:last-child {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      user-select: all;
-      cursor: pointer;
-    }
-  }
 }
 
 #list, #save, #view {
@@ -833,8 +835,8 @@ textarea {
     text-overflow: ellipsis;
   }
   .book-author {
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
+    max-width: calc(100% - 15rem);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -886,6 +888,9 @@ textarea {
   opacity: 0;
   transform: translate(-10rem);
   pointer-events: none;
+  &:has(button[type="submit"]:disabled) {
+    pointer-events: none;
+  }
   button[type="submit"]:disabled {
     svg:first-child {
       opacity: 0;
@@ -1015,7 +1020,7 @@ article {
   }
   img {
     border-radius: 0 .75rem .75rem 0;
-    box-shadow: .5rem .5rem 1rem var(--color-neutral-01a);
+    box-shadow: .5rem .5rem 1rem #0013;
   }
   textarea {
     field-sizing: content;
@@ -1394,9 +1399,6 @@ article {
     --color-amber-8: hsl(240 10 25);
     --color-amber-9: hsl(240 10 30 / .75);
     --color-white: hsl(240 10 10);
-  }
-  article img {
-    box-shadow: .5rem .5rem 1rem #000c;
   }
 }
 

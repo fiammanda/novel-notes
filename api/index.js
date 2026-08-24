@@ -1,7 +1,9 @@
 import { Hono } from "hono";
+import { etag } from "hono/etag";
 import { getCookie, setCookie } from "hono/cookie";
-import { scrape } from "#src/scraper.js";
-import { db } from "#src/supabase.js";
+import { blob } from "#lib/blob.js";
+import { redis } from "#lib/redis.js";
+import { parse } from "#lib/sites.js";
 
 const app = new Hono();
 
@@ -14,66 +16,68 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
-app.get("/data.js", async (c) => {
+app.get("/data.js", etag(), async (c) => {
   if (!c.get("same-site")) return c.notFound();
-  const data = await db.list();
   const auth = c.get("auth");
-  return c.body(`window.AUTH=${JSON.stringify(auth)};window.DATA=${JSON.stringify(data)};`, 200, {
-    "Content-Type": "application/javascript; charset=UTF-8",
-    "Cache-Control": "public, max-age=600, s-maxage=300, stale-while-revalidate=3600"
-  });
+  const data = await redis.get();
+  c.header("Vary", "Cookie");
+  c.header("Content-Type", "application/javascript; charset=UTF-8");
+  auth
+    ? c.header("Cache-Control", "private, max-age=60")
+    : c.header("Cache-Control", "public, max-age=60, s-maxage=86400, stale-while-revalidate=86400");
+  return c.body(`window.AUTH=${JSON.stringify(auth)};window.DATA=${JSON.stringify(data.sort((a, b) => b.update.localeCompare(a.update)))};`);
 });
 
 app.get("/img/:id", async (c) => {
   if (!c.get("same-site")) return c.notFound();
-  const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/cover/${c.req.param("id")}.webp`;
+  const url = `https://${process.env.BLOB_STORE_ID.slice(6)}.public.blob.vercel-storage.com/${c.req.param("id")}.webp`;
   const res = await fetch(url);
   if (!res.ok) return c.notFound();
-  return new Response(res.body, {
-    status: 200,
-    headers: {
-      "Content-Type": res.headers.get("Content-Type") || "image/webp",
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
+  c.header("Content-Type", res.headers.get("Content-Type") || "image/webp");
+  c.header("Cache-Control", "public, max-age=31536000, immutable");
+  return c.body(res.body);
 });
 
 app.get("/api/data/update", async (c) => {
-  if (!c.get("auth")) return c.notFound();
-  const list = await db.list(true);
-  const info = await scrape(list.map(({ url }) => url), true);
+  const date = new Date().getDate();
+  const auth = c.get("auth");
+  if (!auth) return c.notFound();
+  let list = await redis.get();
+  if (auth === "secret") {
+    list = list.filter((item) =>
+      item.status === "连载" &&
+      (item.progress !== "观望" || date % 5 === 0) &&
+      (item.progress !== "弃文" || date === 1)
+    );
+  }
+  const info = await parse(list.map(({ url }) => url), true);
   const book = new Map(list.map((item) => [item.url, item]));
-  const data = info.data.map(({ url, ...meta }) => ({ ...book.get(url), ...meta }));
-  return c.json(await db.upsert(data));
+  const data = info.data.map(({ url, ...rest }) => ({ ...book.get(url), ...rest }));
+  return c.json(await redis.set(data));
 });
 
 app.post("/api/data/meta", async (c) => {
   if (!c.get("auth")) return c.json({ error: "Unauthorized" }, 401);
-  const data = await c.req.json();
-  return c.json(await scrape(data));
+  const list = await c.req.json();
+  return c.json(await parse(list));
 });
 
 app.post("/api/data", async (c) => {
   if (!c.get("auth")) return c.json({ error: "Unauthorized" }, 401);
-  const res = [];
-  const data = await c.req.json();
-  const novel = data.map(({ upload, ...book }) => book);
-  const cover = data.filter(({ upload }) => upload).map(({ id, url, upload }) => ({ id, url, upload }));
-  const error = [];
-  const summary = [];
-  res[0] = await db.upsert(novel);
-  res[0].success
-    ? summary.push(`${data.length} novel${data.length === 1 ? "" : "s"} ${res[0].status === 200 ? "updated" : "imported"}`)
-    : error.push({ msg: res[0].error.message });
-  if (cover.length) {
-    res[1] = await db.upload(cover);
-    const count = cover.length - res[1].error.length;
-    summary.push(`${count} cover${count === 1 ? "" : "s"} uploaded`);
+  const list = await c.req.json();
+  const novel = list.map(({ upload, ...book }) => book);
+  const cover = list.filter(({ upload }) => upload).map(({ id, url, upload }) => ({ id, url, upload }));
+  const error = [ await redis.set(novel) ];
+  let data = error[0].msg
+     ? "发生错误"
+     : `${error.pop() ? "创建" : "更新"} ${list.length} 条记录`;
+  if (cover.length && !error.length) {
+    const res = await blob.put(cover);
+    const len = cover.length - res.error.length;
+    if (len) data += `　上传 ${len} 张封面`;
+    if (res.error.length) error.push(...res.error);
   }
-  return c.json({
-    summary: summary.join(", "),
-    error: error.concat(res[1]?.error || [])
-  });
+  return c.json({ data, errs: error });
 });
 
 app.post("/api/auth", async (c) => {

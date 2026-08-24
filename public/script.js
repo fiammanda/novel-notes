@@ -27,7 +27,6 @@ const ref = {
 
 const doc = {
   auth: document.forms.auth,
-  log: document.querySelector("[role=log]"),
   link: document.querySelector("#widget a"),
   button: document.querySelector("#widget button"),
 };
@@ -76,7 +75,7 @@ document.body.addEventListener("click", (e) => {
         }
         button.dispatchEvent(new Event("input", { bubbles: true }));
         select.blur();
-        select.querySelector("[aria-selected=true]").ariaSelected = "false";
+        select.querySelector("[aria-selected=true]")?.setAttribute("aria-selected", "false");
         option.ariaSelected = "true";
       } else if (e.target.closest("button")) {
         const box = select.querySelector("[role=textbox]");
@@ -274,13 +273,12 @@ doc.filter.addEventListener("reset", () => {
 
 doc.filter.addEventListener("submit", (e) => {
   e.preventDefault();
-  filter();
 });
 
 doc.import.addEventListener("submit", async (e) => {
   e.preventDefault();
   const urls = [];
-  const logs = { error: [] };
+  const errs = [];
 
   doc.import.urls.value.split("\n").forEach((url) => {
     if (!url.trim() || !url.includes("http")) return;
@@ -289,17 +287,17 @@ doc.import.addEventListener("submit", async (e) => {
       u.hash = "";
       u.search = "";
       ref.urls.has(u.href)
-        ? logs.error.push({ url: u.href, msg: "URL already exists" })
+        ? errs.push({ url: u.href, msg: "URL already exists" })
         : urls.push(u.href);
       return u.href;
     } catch (e) {
-      logs.error.push({ url, msg: e.message });
+      errs.push({ url, msg: e.message });
     }
   });
 
   if (!urls.length) {
-    logs.summary = "No valid URL";
-    log(logs);
+    notify("未发现有效链接", errs);
+    errs.length = 0;
     return;
   }
 
@@ -322,8 +320,7 @@ doc.import.addEventListener("submit", async (e) => {
     new Promise(res => setTimeout(res, 200))
   ]);
   spin.repeat(0);
-  json.error = (json.error || []).concat(logs.error || []);
-  log(json);
+  notify(`抓取 ${json.data.length}/${urls.length} 条信息`, json.errs);
   e.submitter.removeAttribute("disabled");
   doc.save.firstElementChild.innerHTML = render(json.data, "save");
   setTimeout(() => doc.save.removeAttribute("class"), 0);
@@ -349,7 +346,8 @@ doc.save.addEventListener("submit", async (e) => {
     body: JSON.stringify(data)
   });
   const json = await resp.json();
-  if (!json.error.length) {
+  notify(json.data, json.errs);
+  if (!json.errs.length) {
     DATA.push(...data);
     data.forEach((item) => {
       ref.list.set(item.id, item);
@@ -367,7 +365,6 @@ doc.save.addEventListener("submit", async (e) => {
     }, 200);
   }
   setTimeout(() => doc.save.submit.disabled = false, 200);
-  log(json);
 });
 
 doc.view.addEventListener("reset", (e) => {
@@ -389,7 +386,8 @@ doc.view.addEventListener("submit", async (e) => {
     body: JSON.stringify([item])
   });
   const json = await resp.json();
-  if (!json.error.length) {
+  notify(json.data, json.errs);
+  if (!json.errs.length) {
     DATA[DATA.findIndex(({ id }) => id === item.id)] = item;
     ref.list.set(item.id, item);
     doc.view.set.disabled = true;
@@ -430,16 +428,13 @@ navigate();
 
 setTimeout(() => document.body.removeAttribute("class"), 10);
 
-function log(logs) {
-  let html = logs.summary ? `<li class="log-summary">${logs.summary}${logs.error.length ? ":" : ""}</li>` : ``;
-  html += logs.error
-    .map(({ msg, url }) => `<li class="log-entry"><span>${msg}</span> <span>${url || ""}</span></li>`)
-    .join("");
-  doc.log.className = "hidden";
+function notify(text, logs, timeout = 2000) {
+  logs?.length && console.log(logs.map(({ msg, url }) => `${msg}${url ? ` (${url})` : ``}`).join("\n"));
+  doc.notice.textContent = text;
+  doc.notice.removeAttribute("class");
   setTimeout(() => {
-    doc.log.innerHTML = html;
-    doc.log.removeAttribute("class");
-  }, 200);
+    doc.notice.className = "hidden";
+  }, timeout);
 }
 
 function filter(type) {
@@ -479,6 +474,8 @@ function filter(type) {
 }
 
 function render(data, type) {
+  if (!data.length) return "";
+
   if (type === "list") {
     return data.map(({ id, title, author, update, rating, progress }) => {
       let star = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">`;
@@ -509,10 +506,10 @@ function render(data, type) {
       html[0] += `<article>
         <div class="book-cover">
           <figure>
-            <img src="${cover ? `https://fly.webp.se/image?url=${cover}` : upload || `/img/${id}`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
+            <img src="${cover ? `https://fly.webp.se/image?url=${cover}` : upload || `https://luh4axz33r3lg8pu.public.blob.vercel-storage.com/${id}.webp`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
           </figure>
-          <a data-name="url" href="${url}" target="_blank" rel="noopener noreferrer">${new URL(url).hostname}</a>
           <input type="hidden" name="id" value="${id}" />
+          <a data-name="url" href="${url}" target="_blank" rel="noopener noreferrer">${new URL(url).hostname}</a>
           ${edit ? `<input type="hidden" name="edit" value="${new Date().toLocaleDateString("sv")}" />` : ``}
           ${cover ? `<input type="hidden" name="cover" value="${cover}" />` : ``}
           ${upload ? `<input type="hidden" name="upload" value="${upload}" />` : ``}

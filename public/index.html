@@ -43,7 +43,7 @@
       </section>
       <form id="filter" autocomplete="off">
         <div class="select" tabindex="0">
-          <span role="combobox" aria-label="录入" data-key="post" data-dir="dsc" data-name="sort">
+          <span role="combobox" aria-label="更新" data-key="post" data-dir="dsc" data-name="sort">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25">
               <path d="M3 5h18" />
               <path d="M15 12H3" />
@@ -51,10 +51,10 @@
             </svg>
           </span>
           <ul role="listbox">
-            <li role="option" data-key="post" data-dir="dsc" aria-selected="true">录入</li>
-            <li role="option" data-key="post" data-dir="asc" aria-selected="false">录入</li>
-            <li role="option" data-key="update" data-dir="dsc" aria-selected="false">更新</li>
+            <li role="option" data-key="update" data-dir="dsc" aria-selected="true">更新</li>
             <li role="option" data-key="update" data-dir="asc" aria-selected="false">更新</li>
+            <li role="option" data-key="post" data-dir="dsc" aria-selected="false">录入</li>
+            <li role="option" data-key="post" data-dir="asc" aria-selected="false">录入</li>
             <li role="option" data-key="rating" data-dir="dsc" aria-selected="false">评分</li>
             <li role="option" data-key="rating" data-dir="asc" aria-selected="false">评分</li>
           </ul>
@@ -95,7 +95,6 @@
         </fieldset>
       </form>
       <form id="import">
-        <ul role="log"></ul>
         <textarea name="urls" placeholder=""></textarea>
         <footer>
           <button type="reset">
@@ -156,6 +155,7 @@
       <main id="list">
         <ul></ul>
       </main>
+      <div id="notice" role="status" class="hidden"></div>
       <dialog id="dialog">
         <form name="auth" class="hidden" autocomplete="off">
           <label>
