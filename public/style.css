@@ -666,7 +666,7 @@ textarea {
     pointer-events: none;
   }
   [name="search"] {
-    width: clamp(9rem, 15vw, 12rem);
+    width: 9rem;
   }
   .select {
     color: var(--color-neutral-040);
@@ -829,14 +829,14 @@ textarea {
     color: var(--color-neutral-080);
   }
   .book-title {
-    min-width: 0;
+    flex-shrink: 999;
+    min-width: calc(6em + 1px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .book-author {
-    flex-shrink: 0;
-    max-width: calc(100% - 15rem);
+    min-width: calc(3em + 1px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
