@@ -3,14 +3,8 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api" },
     { "source": "/data.js", "destination": "/api" },
-    { "source": "/img/:id", "destination": "/api" },
     { "source": "/import", "destination": "/index.html" },
-    { "source": "/:id([0-9a-z]{10})", "destination": "/index.html" }
-  ],
-  "crons": [
-    {
-      "path": "/api/data/update",
-      "schedule": "0 5 * * *"
-    }
+    { "source": "/:id([0-9a-z]{10})", "destination": "/index.html" },
+    { "source": "/img/:id([0-9a-z]{10})", "destination": "https://luh4axz33r3lg8pu.public.blob.vercel-storage.com/:id.webp" }
   ]
 }

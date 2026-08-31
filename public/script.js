@@ -2,9 +2,12 @@ navigator.serviceWorker && navigator.serviceWorker.register("/sw.js");
 
 gsap.registerPlugin(Flip);
 
-const DATA = window.DATA || [];
-const AUTH = "AUTH" in window ? window.AUTH : null;
-if(!AUTH) document.body.dataset.auth = AUTH;
+window.DATA ??= [];
+window.AUTH ??= null;
+if(!AUTH) {
+  document.body.dataset.auth = AUTH;
+  window.visualViewport.addEventListener("resize", scroll);
+}
 
 const ref = {
   pwa: window.matchMedia("(display-mode: standalone)").matches,
@@ -37,6 +40,7 @@ for (const child of document.body.firstElementChild.children) {
     if (child.id === "filter") doc.filter.option = doc.filter.querySelectorAll("fieldset [role=option]");
   }
 }
+doc.auth.wrap = doc.auth.firstElementChild;
 doc.list = doc.list.firstElementChild;
 doc.list.innerHTML = render(DATA, "list");
 
@@ -56,7 +60,7 @@ document.body.addEventListener("click", (e) => {
 
   if (e.target.closest("[data-nav]")) {
     const nav = e.target.closest("[data-nav]");
-    doc.save.set.firstElementChild.children[nav.dataset.nav].scrollIntoView({ behavior: "smooth" });
+    doc.save.set.firstElementChild.children[nav.dataset.nav].scrollIntoView();
     return;
   }
 
@@ -213,12 +217,13 @@ document.body.addEventListener("focusout", (e) => {
     freeze(e.target);
     return;
   }
-
   if (e.target.matches(".date span[contenteditable=true]")) {
     e.target.dataset.value = e.target.textContent;
     return;
   }
 });
+
+doc.auth.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
 
 doc.auth.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -231,8 +236,13 @@ doc.auth.addEventListener("submit", async (e) => {
   });
   const { success } = await resp.json();
   if (success) {
+    delete document.body.dataset.auth;
+    window.visualViewport.removeEventListener("resize", scroll);
+    [...doc.link.firstElementChild.children].forEach((el, i) => el.setAttribute("d", ["M12 5 L12 19", "M5 12 L19 12", "M5 12 L19 12", "M5 12 L19 12"][i]));
     doc.link.href = "/import";
     doc.dialog.dispatchEvent(new Event("cancel"));
+    AUTH = true;
+    console.log(AUTH)
   } else {
     pass.disabled = false;
     pass.readOnly = true;
@@ -407,7 +417,10 @@ doc.view.addEventListener("submit", async (e) => {
 
 doc.dialog.addEventListener("toggle", (e) => {
   if (!doc.dialog.open) return;
-  setTimeout(() => doc.auth.removeAttribute("class"), 0);
+  ref.scroll.window = window.scrollY;
+  setTimeout(() => {
+    doc.auth.removeAttribute("class");
+  }, 0);
 });
 
 doc.dialog.addEventListener("cancel", (e) => {
@@ -427,6 +440,19 @@ window.addEventListener("popstate", () => {
 navigate();
 
 setTimeout(() => document.body.removeAttribute("class"), 10);
+
+
+doc.auth.passcode.addEventListener("blur", () => {
+  if (!doc.auth.getBoundingClientRect().top) return;
+  doc.auth.firstElementChild.style.translate = `0 ${(window.visualViewport.height - window.innerHeight) / 2}px`;
+})
+function scroll() {
+  const delta = window.innerHeight - window.visualViewport.height;
+  if (delta <= 0) {
+    doc.auth.firstElementChild.removeAttribute("style");
+    window.scrollTo(0, ref.scroll.window ?? 0);
+  }
+}
 
 function notify(text, logs, timeout = 2000) {
   logs?.length && console.log(logs.map(({ msg, url }) => `${msg}${url ? ` (${url})` : ``}`).join("\n"));
@@ -506,7 +532,7 @@ function render(data, type) {
       html[0] += `<article>
         <div class="book-cover">
           <figure>
-            <img src="${cover ? `https://fly.webp.se/image?url=${cover}` : upload || `https://luh4axz33r3lg8pu.public.blob.vercel-storage.com/${id}.webp`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
+            <img src="${cover ? `https://fly.webp.se/image?url=${cover}` : upload || `/img/${id}`}" onload="requestAnimationFrame(()=>{this.removeAttribute('onload')})" />
           </figure>
           <input type="hidden" name="id" value="${id}" />
           <a data-name="url" href="${url}" target="_blank" rel="noopener noreferrer">${new URL(url).hostname}</a>
@@ -637,6 +663,10 @@ function navigate(popstate = false, path = location.pathname) {
       attr: { d: (i) => ["M17 5 L17 19", "M4 12 L13 12", "M4 12 L8 8", "M4 12 L8 16"][i] }
     });
   } else if (path === "/import") {
+    if (!AUTH) {
+      history.replaceState(null, "", "/");
+      return;
+    }
     document.body.dataset.mode = "save";
     doc.link.href = "/";
     gsap.to(line, {

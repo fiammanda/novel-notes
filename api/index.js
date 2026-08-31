@@ -28,32 +28,27 @@ app.get("/data.js", etag(), async (c) => {
   return c.body(`window.AUTH=${JSON.stringify(auth)};window.DATA=${JSON.stringify(data.sort((a, b) => b.update.localeCompare(a.update)))};`);
 });
 
-app.get("/img/:id", async (c) => {
-  if (!c.get("same-site")) return c.notFound();
-  const url = `https://${process.env.BLOB_STORE_ID.slice(6)}.public.blob.vercel-storage.com/${c.req.param("id")}.webp`;
-  const res = await fetch(url);
-  if (!res.ok) return c.notFound();
-  c.header("Content-Type", res.headers.get("Content-Type") || "image/webp");
-  c.header("Cache-Control", "public, max-age=31536000, immutable");
-  return c.body(res.body);
-});
-
 app.get("/api/data/update", async (c) => {
-  const date = new Date().getDate();
   const auth = c.get("auth");
   if (!auth) return c.notFound();
-  let list = await redis.get();
+  let full = await redis.get();
+  let list = full;
   if (auth === "secret") {
-    list = list.filter((item) =>
-      item.status === "连载" &&
-      (item.progress !== "观望" || date % 5 === 0) &&
-      (item.progress !== "弃文" || date === 1)
+    const date = new Date().getDate();
+    const hour = new Date().getHours();
+    list = full.filter(({ status, progress }) =>
+      date === 5 && hour < 12 ||
+      status === "连载" && progress === "观望" && date % 5 === 0 && hour < 12 ||
+      status === "连载" && progress === "追读"
     );
   }
+  if (!list.length) return c.json({ updated: `0/${full.length}` });
   const info = await parse(list.map(({ url }) => url), true);
   const book = new Map(list.map((item) => [item.url, item]));
   const data = info.data.map(({ url, ...rest }) => ({ ...book.get(url), ...rest }));
-  return c.json(await redis.set(data));
+  await redis.set(data);
+  console.log(`updated: ${list.length}/${full.length}`);
+  return c.json({ updated: `${list.length}/${full.length}` });
 });
 
 app.post("/api/data/meta", async (c) => {

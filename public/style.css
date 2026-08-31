@@ -62,11 +62,14 @@
 }
 
 html {
-  font-size: max(16px, 1vw);
+  font-size: clamp(16px, .9vw, 20px);
   text-size-adjust: none;
   text-rendering: optimizeLegibility;
+  color: var(--color-neutral-030);
+  background: var(--color-white);
   cursor: crosshair;
   touch-action: manipulation;
+  scroll-behavior: smooth;
   overscroll-behavior: contain;
   scrollbar-color: var(--color-neutral-00a) transparent;
   scrollbar-width: thin;
@@ -81,8 +84,6 @@ html {
 body {
   font: 1rem/1.5 var(--font-sans);
   font-feature-settings: var(--font-feature);
-  color: var(--color-neutral-030);
-  background: var(--color-white);
   transition: opacity var(--transition);
 }
 
@@ -129,7 +130,7 @@ form {
   padding: 0;
   font-size: .875rem;
   transition: var(--transition);
-  transition-property: opacity, transform;
+  transition-property: opacity, translate;
 }
 fieldset {
   display: block;
@@ -495,7 +496,7 @@ textarea {
 #app > [id] {
   min-height: 0;
   transition: var(--transition);
-  transition-property: opacity, transform;
+  transition-property: opacity, translate;
 }
 
 #notice {
@@ -510,13 +511,12 @@ textarea {
   border-radius: var(--radius);
   box-shadow: 0 0 1rem #0013;
   backdrop-filter: blur(.25rem);
-  transform: translate(-50%);
+  translate: -50%;
   transition: var(--transition);
-  transition-property: opacity, transform;
   transition-delay: 0s, 0s;
   z-index: 3;
   &.hidden {
-    transform: translate(-50%, -2rem);
+    translate: -50% -2rem;
     transition-delay: 0s, 2s;
   }
 }
@@ -525,6 +525,13 @@ textarea {
   --input-bg-focus: var(--color-white);
   &::backdrop {
     opacity: 0;
+  }
+  div {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition-property: bottom;
   }
   form {
     position: fixed;
@@ -535,6 +542,12 @@ textarea {
     backdrop-filter: blur(.5rem);
     z-index: 1;
   }
+  label {
+    transition: translate .325s ease-in-out;
+  }
+  label[style] {
+    transition: none;
+  }
   label:has(input[readonly]) {
     animation: shake .6s linear;
   }
@@ -542,7 +555,7 @@ textarea {
     --input-bg: var(--color-white);
     --input-bg-hover: var(--color-white);
     &:disabled {
-      --input-bg: var(--color-neutral-095);
+      background: var(--color-neutral-095);
       + .label svg:last-child {
         opacity: 1;
       }
@@ -640,6 +653,7 @@ textarea {
 }
 
 #filter {
+  white-space: nowrap;
   --button-cl: var(--color-neutral-070);
   --button-bg: var(--color-neutral-04a);
   [data-auth="null"] & {
@@ -647,7 +661,7 @@ textarea {
   }
   [data-mode] & {
     opacity: 0;
-    transform: translate(10rem);
+    translate: 10rem;
     pointer-events: none;
   }
   fieldset {
@@ -701,13 +715,13 @@ textarea {
       color: var(--color-neutral-050);
     }
     path {
-      transition: transform var(--transition);
+      transition: translate var(--transition);
     }
     [data-dir="asc"] path:first-child {
-      transform: translate(0, .875rem);
+      translate: 0 .875rem;
     }
     [data-dir="asc"] path:last-child {
-      transform: translate(0, -.875rem);
+      translate: 0 -.875rem;
     }
   }
 }
@@ -715,11 +729,11 @@ textarea {
 #import {
   position: relative;
   opacity: 0;
-  transform: translate(-10rem);
+  translate: -10rem;
   pointer-events: none;
   [data-mode="save"] & {
     opacity: 1;
-    transform: none;
+    translate: 0;
     pointer-events: auto;
   }
   [name="urls"] {
@@ -765,10 +779,10 @@ textarea {
 }
 
 #list {
-  will-change: opacity, transform;
+  will-change: opacity, translate;
   [data-mode] & {
     opacity: 0;
-    transform: translate(10rem);
+    translate: 10rem;
     pointer-events: none;
   }
   ul {
@@ -879,14 +893,14 @@ textarea {
   .book-update span:last-child {
     display: inline-block;
     margin: 0 1px;
-    transform: translateY(-8%);
+    translate: 0 -8%;
   }
 }
 
 #save, #view {
   padding-block: 0;
   opacity: 0;
-  transform: translate(-10rem);
+  translate: -10rem;
   pointer-events: none;
   &:has(button[type="submit"]:disabled) {
     pointer-events: none;
@@ -914,12 +928,13 @@ textarea {
 
 [data-mode="save"] #save, [data-mode="view"] #view {
   opacity: 1;
-  transform: none;
+  translate: 0;
   pointer-events: auto;
 }
 
 #save {
   position: relative;
+  scroll-behavior: smooth;
   fieldset {
     display: flex;
     align-items: flex-start;
@@ -1146,7 +1161,7 @@ article {
     padding: 2rem var(--padding);
     [data-mode] & {
       opacity: 0;
-      transform: translate(-10rem);
+      translate: -10rem;
       pointer-events: none;
     }
     h1 {
@@ -1191,7 +1206,7 @@ article {
     display: flex;
     gap: .25rem;
     [data-mode] & {
-      transform: translate(-10rem);
+      translate: -10rem;
     }
     fieldset {
       display: contents;
@@ -1211,9 +1226,9 @@ article {
     inset: 2rem var(--padding) auto;
     padding: 0;
     z-index: 1;
-    transform: translate(10rem);
+    translate: 10rem;
     &:has(+ #save article) {
-      transform: translate(0, -10rem);
+      translate: 0 -10rem;
       opacity: 0;
       pointer-events: none;
     }
@@ -1234,7 +1249,7 @@ article {
       padding: 2rem var(--padding) 7rem;
     }
     [data-mode] & {
-      transform: translate(-10rem);
+      translate: -10rem;
     }
     [data-auth="null"] & ul::after {
       position: static;
@@ -1244,7 +1259,7 @@ article {
   #save, #view {
     position: fixed;
     inset: 0;
-    transform: translate(10rem);
+    translate: 10rem;
     footer {
       display: flex;
       flex-direction: row-reverse;
@@ -1258,7 +1273,7 @@ article {
     }
   }
   [data-mode="save"] #save, [data-mode="view"] #view {
-    transform: none;
+    translate: 0;
   }
   #save {
     fieldset, article {
@@ -1411,13 +1426,13 @@ article {
   100% { stroke-dasharray:  1 57; stroke-dashoffset: -57; }
 }
 @keyframes shake {
-    0% { transform: translate(-.75rem); }
-   17% { transform: translate(.75rem); }
-   33% { transform: translate(-.5rem); }
-   50% { transform: translate(.5rem); }
-   67% { transform: translate(-.25rem); }
-   83% { transform: translate(.25rem); }
-  100% { transform: translate(0); }
+    0% { translate: -.75rem; }
+   17% { translate: .75rem; }
+   33% { translate: -.5rem; }
+   50% { translate: .5rem; }
+   67% { translate: -.25rem; }
+   83% { translate: .25rem; }
+  100% { translate: 0; }
 }
 
 @font-face {
