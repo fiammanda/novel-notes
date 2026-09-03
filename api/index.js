@@ -31,24 +31,44 @@ app.get("/data.js", etag(), async (c) => {
 app.get("/api/data/update", async (c) => {
   const auth = c.get("auth");
   if (!auth) return c.notFound();
-  let full = await redis.get();
-  let list = full;
+
+  const offset = Number(c.req.query("offset") || 0);
+  const number = [];
+
+  let list = await redis.get();
+  number[0] = list.length;
   if (auth === "secret") {
     const date = new Date().getDate();
     const hour = new Date().getHours();
-    list = full.filter(({ status, progress }) =>
+    list = list.filter(({ status, progress }) =>
       date === 5 && hour < 12 ||
       status === "连载" && progress === "观望" && date % 5 === 0 && hour < 12 ||
       status === "连载" && progress === "追读"
     );
   }
-  if (!list.length) return c.json({ updated: `0/${full.length}` });
-  const info = await parse(list.map(({ url }) => url), true);
-  const book = new Map(list.map((item) => [item.url, item]));
-  const data = info.data.map(({ url, ...rest }) => ({ ...book.get(url), ...rest }));
+  number[1] = list.length;
+  list = list.slice(offset, offset + 25);
+  if (!list.length) return c.json({ updated: `0/${number[1]} (${number[0]})` });
+
+  const bmap = new Map(list.map((item) => [item.url, item]));
+  const resp = await parse(list.map(({ url }) => url), true);
+  const data = resp.data.map(({ url, ...rest }) => ({ ...bmap.get(url), ...rest }));
   await redis.set(data);
-  console.log(`updated: ${list.length}/${full.length}`);
-  return c.json({ updated: `${list.length}/${full.length}` });
+
+  const next = offset + 25;
+  if (next < list.length) {
+    const url = `${new URL(c.req.url).origin}/api/data/update?offset=${next}`;
+    await fetch(`https://qstash-us-east-1.upstash.io/v2/publish/${encodeURIComponent(url)}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.QSTASH_TOKEN}`,
+        "Upstash-Forward-Authorization": `Bearer ${process.env.CRON_SECRET}`
+      }
+    });
+  }
+
+  console.log(`updated: ${list.length}/${number[1]} (${number[0]})`);
+  return c.json({ updated: `${list.length}/${number[1]} (${number[0]})` });
 });
 
 app.post("/api/data/meta", async (c) => {

@@ -29,11 +29,12 @@ const ref = {
 };
 
 const doc = {
+  app: document.body.lastElementChild,
   auth: document.forms.auth,
   link: document.querySelector("#widget a"),
   button: document.querySelector("#widget button"),
 };
-for (const child of document.body.firstElementChild.children) {
+for (const child of doc.app.children) {
   doc[child.id] = child;
   if (child.tagName === "FORM") {
     child.querySelectorAll("[data-name]").forEach((el) => doc[child.id][el.dataset.name] = el);
@@ -401,6 +402,7 @@ doc.view.addEventListener("submit", async (e) => {
     DATA[DATA.findIndex(({ id }) => id === item.id)] = item;
     ref.list.set(item.id, item);
     doc.view.set.disabled = true;
+    doc.view.review.textContent = item.review;
     doc.view.querySelectorAll(".select, [contenteditable]").forEach((el) => {
       el.dataset.tab ? el.removeAttribute("tabindex") : el.setAttribute("contenteditable", "false");
     });
@@ -439,7 +441,7 @@ window.addEventListener("popstate", () => {
 
 navigate();
 
-setTimeout(() => document.body.removeAttribute("class"), 10);
+setTimeout(() => doc.app.removeAttribute("class"), 10);
 
 
 doc.auth.passcode.addEventListener("blur", () => {
@@ -650,8 +652,8 @@ function navigate(popstate = false, path = location.pathname) {
   const line = doc.link.firstElementChild.children;
   const item = ref.list.get(path.slice(1));
   if (popstate && ref.pwa) {
-    document.body.className = "instant";
-    setTimeout(() => document.body.removeAttribute("class"), 10);
+    doc.app.className = "instant";
+    setTimeout(() => doc.app.removeAttribute("class"), 10);
   }
   if (item) {
     document.body.dataset.mode = "view";
