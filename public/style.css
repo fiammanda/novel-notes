@@ -65,8 +65,6 @@ html {
   font-size: clamp(16px, .9vw, 20px);
   text-size-adjust: none;
   text-rendering: optimizeLegibility;
-  color: var(--color-neutral-030);
-  background: var(--color-white);
   cursor: crosshair;
   touch-action: manipulation;
   scroll-behavior: smooth;
@@ -84,7 +82,8 @@ html {
 body {
   font: 1rem/1.5 var(--font-sans);
   font-feature-settings: var(--font-feature);
-  transition: opacity var(--transition);
+  color: var(--color-neutral-030);
+  background: var(--color-white);
 }
 
 a {
@@ -115,7 +114,7 @@ img {
 }
 svg {
   width: 1rem;
-  height: 1rem;
+  aspect-ratio: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -481,6 +480,24 @@ textarea {
   }
 }
 
+#loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+  &:has(+ .hidden) {
+    opacity: 1;
+  }
+  svg {
+    width: 2rem;
+    opacity: .5;
+    stroke: currentColor;
+  }
+}
+
 #app {
   display: grid;
   grid-template-columns: clamp(21rem, 25vw + 6rem, 28rem) 1fr;
@@ -492,6 +509,7 @@ textarea {
   gap: 1.5rem;
   height: 100dvh;
   overflow: clip;
+  transition: opacity var(--transition);
 }
 #app > [id] {
   min-height: 0;
